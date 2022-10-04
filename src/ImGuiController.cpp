@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -16,29 +17,72 @@ namespace ste::ImGuiController
 {
 	bool menuBarEnabled = true;
 	bool statsEnabled = false;
+	int editorIdCounter = 0;
 
-	std::unordered_set<TextEditor*> textEditors;
+	std::unordered_map<std::string, const TextEditor::LanguageDefinition*> extensionToLanguageDefinition = {
+		{".cpp", &TextEditor::LanguageDefinition::CPlusPlus()},
+		{".hpp", &TextEditor::LanguageDefinition::CPlusPlus()},
+		{".cc", &TextEditor::LanguageDefinition::CPlusPlus()},
+		{".hlsl", &TextEditor::LanguageDefinition::HLSL()},
+		{".glsl", &TextEditor::LanguageDefinition::GLSL()},
+		{".c", &TextEditor::LanguageDefinition::C()},
+		{".h", &TextEditor::LanguageDefinition::C()},
+		{".sql", &TextEditor::LanguageDefinition::SQL()},
+		{".as", &TextEditor::LanguageDefinition::AngelScript()},
+		{".lua",& TextEditor::LanguageDefinition::Lua()}
+	};
 
-	void CreateNewEditor()
+	struct TextEditorInfo
+	{
+		int id;
+		bool hasAssociatedFile = false;
+		std::string panelName;
+		std::string associatedFile;
+	};
+
+	std::unordered_map<TextEditor*, TextEditorInfo> textEditors;
+
+	void CreateNewEditor(TextEditorInfo* info = nullptr)
 	{
 		TextEditor* editor = new TextEditor();
-		auto lang = TextEditor::LanguageDefinition::CPlusPlus();
-		editor->SetLanguageDefinition(lang);
-		textEditors.insert(editor);
+		if (info == nullptr)
+			textEditors.insert({ editor, {editorIdCounter, false, "untitled##" + std::to_string(editorIdCounter), ""} });
+		else
+		{
+			textEditors.insert({ editor, *info });
+			textEditors[editor].id = editorIdCounter;
+			textEditors[editor].panelName += "##" + std::to_string(editorIdCounter);
+			std::ifstream t(info->associatedFile);
+			std::string str((std::istreambuf_iterator<char>(t)),
+				std::istreambuf_iterator<char>());
+			editor->SetText(str);
+			auto lang = extensionToLanguageDefinition.find(std::filesystem::path(info->associatedFile).extension().string());
+			if (lang != extensionToLanguageDefinition.end())
+				editor->SetLanguageDefinition(*(*lang).second);
+		}
+		editorIdCounter++;
 	}
 
 	bool EditorTick(TextEditor* editor)
 	{
 		bool closingEditor = false;
 		auto cpos = editor->GetCursorPosition();
-		ImGui::Begin(("untitled-" + std::to_string((int)editor)).c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+		ImGui::PushID(editor);
+		ImGui::Begin(textEditors[editor].panelName.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
 		bool isFocused = ImGui::IsWindowFocused();
 		ImGui::SetWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Load"))
+				if (textEditors[editor].hasAssociatedFile && ImGui::MenuItem("Reload", "Ctrl+R"))
+				{
+					std::ifstream t(textEditors[editor].associatedFile);
+					std::string str((std::istreambuf_iterator<char>(t)),
+						std::istreambuf_iterator<char>());
+					editor->SetText(str);
+				}
+				if (ImGui::MenuItem("Load from"))
 				{
 					std::vector<std::string> selection = pfd::open_file("Open file", "", { "Any file", "*" }).result();
 					if (selection.size() == 0)
@@ -51,16 +95,24 @@ namespace ste::ImGuiController
 						editor->SetText(str);
 					}
 				}
-				if (ImGui::MenuItem("Save"))
+				if (ImGui::MenuItem("Save", "Ctrl+S"))
 				{
 					std::string textToSave = editor->GetText();
-					std::string destination = pfd::save_file("Save file", "", { "Any file", "*" }).result();
-					std::ofstream outFile;
-					outFile.open(destination);
-					outFile << textToSave;
-					outFile.close();
+					std::string destination = textEditors[editor].hasAssociatedFile ?
+						textEditors[editor].associatedFile :
+						pfd::save_file("Save file", "", { "Any file", "*" }).result();
+					if (destination.length() > 0)
+					{
+						textEditors[editor].associatedFile = destination;
+						textEditors[editor].hasAssociatedFile = true;
+						textEditors[editor].panelName = std::filesystem::path(destination).filename().string() + "##" + std::to_string(textEditors[editor].id);
+						std::ofstream outFile;
+						outFile.open(destination);
+						outFile << textToSave;
+						outFile.close();
+					}
 				}
-				if (ImGui::MenuItem("Close"))
+				if (ImGui::MenuItem("Close", "Ctrl+W"))
 				{
 					closingEditor = true;
 				}
@@ -75,18 +127,18 @@ namespace ste::ImGuiController
 
 				if (ImGui::MenuItem("Undo", "ALT-Backspace", nullptr, !ro && editor->CanUndo()))
 					editor->Undo();
-				if (ImGui::MenuItem("Redo", "Ctrl-Y", nullptr, !ro && editor->CanRedo()))
+				if (ImGui::MenuItem("Redo", "Ctrl+Y", nullptr, !ro && editor->CanRedo()))
 					editor->Redo();
 
 				ImGui::Separator();
 
-				if (ImGui::MenuItem("Copy", "Ctrl-C", nullptr, editor->HasSelection()))
+				if (ImGui::MenuItem("Copy", "Ctrl+C", nullptr, editor->HasSelection()))
 					editor->Copy();
-				if (ImGui::MenuItem("Cut", "Ctrl-X", nullptr, !ro && editor->HasSelection()))
+				if (ImGui::MenuItem("Cut", "Ctrl+X", nullptr, !ro && editor->HasSelection()))
 					editor->Cut();
 				if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor->HasSelection()))
 					editor->Delete();
-				if (ImGui::MenuItem("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
+				if (ImGui::MenuItem("Paste", "Ctrl+V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
 					editor->Paste();
 
 				ImGui::Separator();
@@ -118,6 +170,7 @@ namespace ste::ImGuiController
 			editor->GetLanguageDefinition().mName.c_str());
 		editor->Render("TextEditor", isFocused);
 		ImGui::End();
+		ImGui::PopID();
 		return closingEditor;
 	}
 }
@@ -179,14 +232,22 @@ void ste::ImGuiController::Tick(float deltaTime)
 		{
 			if (ImGui::BeginMenu("ste"))
 			{
-				if (ImGui::MenuItem("New window", "Ctrl+N"))
+				if (ImGui::MenuItem("New panel", "Ctrl+N"))
 				{
-					std::cout << "creating new window\n";
+					std::cout << "creating new panel\n";
 					CreateNewEditor();
 				}
 				if (ImGui::MenuItem("Open File", "Ctrl+O"))
 				{
 					std::cout << "opening file\n";
+					std::vector<std::string> selection = pfd::open_file("Open file", "", { "Any file", "*" }).result();
+					if (selection.size() == 0)
+						std::cout << "File not loaded\n";
+					else
+					{
+						TextEditorInfo editorInfo = { 0, true, std::filesystem::path(selection[0]).filename().string(), selection[0]};
+						CreateNewEditor(&editorInfo);
+					}
 				}
 				ImGui::MenuItem("Menu bar visible", "F1", &menuBarEnabled);
 				ImGui::EndMenu();
@@ -209,12 +270,12 @@ void ste::ImGuiController::Tick(float deltaTime)
 	}
 
 	TextEditor* editorToDelete = nullptr;
-	for (TextEditor* editor : textEditors)
+	for (auto editor : textEditors)
 	{
-		if (editor != nullptr)
+		if (editor.first != nullptr)
 		{
-			if (EditorTick(editor))
-				editorToDelete = editor;
+			if (EditorTick(editor.first))
+				editorToDelete = editor.first;
 		}
 	}
 	delete editorToDelete;
