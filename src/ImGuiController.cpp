@@ -12,12 +12,14 @@
 #include <TextEditor.h>
 #include <json.hpp>
 #include <portable-file-dialogs.h>
+#include <DirectoryTreeView.h>
 
 namespace ste::ImGuiController
 {
 	bool menuBarEnabled = true;
 	bool statsEnabled = false;
 	int editorIdCounter = 0;
+	int folderViewerIdCounter = 0;
 
 	std::unordered_map<std::string, const TextEditor::LanguageDefinition*> extensionToLanguageDefinition = {
 		{".cpp", &TextEditor::LanguageDefinition::CPlusPlus()},
@@ -38,37 +40,64 @@ namespace ste::ImGuiController
 		bool hasAssociatedFile = false;
 		std::string panelName;
 		std::string associatedFile;
+		bool panelIsOpen = false;
 	};
 
-	std::unordered_map<TextEditor*, TextEditorInfo> textEditors;
+	struct FolderViewerInfo
+	{
+		int id;
+		std::string panelName;
+		std::string folderPath;
+	};
 
-	void CreateNewEditor(TextEditorInfo* info = nullptr)
+	std::unordered_map<std::string, TextEditor*> fileToEditorMap;
+	TextEditor* editorToFocus = nullptr;
+
+	std::unordered_map<TextEditor*, TextEditorInfo> textEditors;
+	std::vector<FolderViewerInfo> folderViewers;
+
+	void CreateNewEditor(const std::string* filePath = nullptr)
 	{
 		TextEditor* editor = new TextEditor();
-		if (info == nullptr)
-			textEditors.insert({ editor, {editorIdCounter, false, "untitled##" + std::to_string(editorIdCounter), ""} });
+		if (filePath == nullptr)
+			textEditors.insert({ editor, {editorIdCounter, false, "untitled##" + std::to_string(editorIdCounter), "", true} });
 		else
 		{
-			textEditors.insert({ editor, *info });
-			textEditors[editor].id = editorIdCounter;
+			auto pathObject = std::filesystem::path(*filePath);
+			textEditors.insert({ editor, { editorIdCounter, true, pathObject.filename().string(), *filePath, true} });
 			textEditors[editor].panelName += "##" + std::to_string(editorIdCounter);
-			std::ifstream t(info->associatedFile);
+			fileToEditorMap[*filePath] = editor;
+			std::ifstream t(*filePath);
 			std::string str((std::istreambuf_iterator<char>(t)),
 				std::istreambuf_iterator<char>());
 			editor->SetText(str);
-			auto lang = extensionToLanguageDefinition.find(std::filesystem::path(info->associatedFile).extension().string());
+			auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
 			if (lang != extensionToLanguageDefinition.end())
 				editor->SetLanguageDefinition(*(*lang).second);
 		}
 		editorIdCounter++;
 	}
 
+	void CreateNewFolderViewer(const std::string& folderPath)
+	{
+		folderViewers.push_back({ folderViewerIdCounter, "Folder view##" + std::to_string(folderViewerIdCounter), folderPath});
+		folderViewerIdCounter++;
+	}
+
 	bool EditorTick(TextEditor* editor)
 	{
-		bool closingEditor = false;
 		auto cpos = editor->GetCursorPosition();
-		ImGui::PushID(editor);
-		ImGui::Begin(textEditors[editor].panelName.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+		if (editorToFocus == editor)
+		{
+			ImGui::SetNextWindowFocus();
+			editorToFocus = nullptr;
+		}
+		ImGui::Begin(textEditors[editor].panelName.c_str(), &(textEditors[editor].panelIsOpen),
+			ImGuiWindowFlags_HorizontalScrollbar |
+			ImGuiWindowFlags_MenuBar |
+			ImGuiWindowFlags_NoSavedSettings |
+			(editor->CanUndo() ? ImGuiWindowFlags_UnsavedDocument : 0x0));
+
 		bool isFocused = ImGui::IsWindowFocused();
 		ImGui::SetWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
 		if (ImGui::BeginMenuBar())
@@ -111,10 +140,6 @@ namespace ste::ImGuiController
 						outFile << textToSave;
 						outFile.close();
 					}
-				}
-				if (ImGui::MenuItem("Close", "Ctrl+W"))
-				{
-					closingEditor = true;
 				}
 				ImGui::EndMenu();
 			}
@@ -170,8 +195,16 @@ namespace ste::ImGuiController
 			editor->GetLanguageDefinition().mName.c_str());
 		editor->Render("TextEditor", isFocused);
 		ImGui::End();
-		ImGui::PopID();
-		return closingEditor;
+		return textEditors[editor].panelIsOpen;
+	}
+
+	// ---- Callbacks ---- //
+	void OnFileClickedInFolderView(const std::string& filePath)
+	{
+		if (fileToEditorMap.find(filePath) == fileToEditorMap.end())
+			CreateNewEditor(&filePath);
+		else
+			editorToFocus = fileToEditorMap[filePath];
 	}
 }
 
@@ -183,7 +216,7 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
 	// Setup Platform/Renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -209,6 +242,8 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
 	auto f = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
+
+	DirectoryTreeView::SetOnFileClickCallback(OnFileClickedInFolderView);
 }
 
 bool ste::ImGuiController::HasControl()
@@ -233,21 +268,22 @@ void ste::ImGuiController::Tick(float deltaTime)
 			if (ImGui::BeginMenu("ste"))
 			{
 				if (ImGui::MenuItem("New panel", "Ctrl+N"))
-				{
-					std::cout << "creating new panel\n";
 					CreateNewEditor();
-				}
-				if (ImGui::MenuItem("Open File", "Ctrl+O"))
+				if (ImGui::MenuItem("Open file", "Ctrl+O"))
 				{
-					std::cout << "opening file\n";
 					std::vector<std::string> selection = pfd::open_file("Open file", "", { "Any file", "*" }).result();
 					if (selection.size() == 0)
 						std::cout << "File not loaded\n";
 					else
-					{
-						TextEditorInfo editorInfo = { 0, true, std::filesystem::path(selection[0]).filename().string(), selection[0]};
-						CreateNewEditor(&editorInfo);
-					}
+						CreateNewEditor(&(selection[0]));
+				}
+				if (ImGui::MenuItem("Open folder"))
+				{
+					std::string folder = pfd::select_folder("Open folder").result();
+					if (folder.length() == 0)
+						std::cout << "folder selection canceled\n";
+					else
+						CreateNewFolderViewer(folder);
 				}
 				ImGui::MenuItem("Menu bar visible", "F1", &menuBarEnabled);
 				ImGui::EndMenu();
@@ -269,17 +305,30 @@ void ste::ImGuiController::Tick(float deltaTime)
 		ImGui::End();
 	}
 
+	int i = 0, folderViewerToDelete = -1;
+	for (auto& folderViewer : folderViewers)
+	{
+		if (!DirectoryTreeView::OnImGui(folderViewer.folderPath, folderViewer.panelName))
+			folderViewerToDelete = i;
+		i++;
+	}
+	if (folderViewerToDelete > -1)
+		folderViewers.erase(folderViewers.begin() + folderViewerToDelete);
+
 	TextEditor* editorToDelete = nullptr;
 	for (auto editor : textEditors)
 	{
 		if (editor.first != nullptr)
 		{
-			if (EditorTick(editor.first))
+			if (!EditorTick(editor.first))
 				editorToDelete = editor.first;
 		}
 	}
-	delete editorToDelete;
-	textEditors.erase(editorToDelete);
+	if (editorToDelete != nullptr)
+	{
+		delete editorToDelete;
+		textEditors.erase(editorToDelete);
+	}
 
 	// Render dear imgui into screen
 	ImGui::Render();
