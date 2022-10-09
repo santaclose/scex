@@ -198,13 +198,25 @@ namespace ste::ImGuiController
 		return textEditors[editor].panelIsOpen;
 	}
 
-	// ---- Callbacks ---- //
+	// ---- Callbacks from folder view ---- //
 	void OnFileClickedInFolderView(const std::string& filePath)
 	{
 		if (fileToEditorMap.find(filePath) == fileToEditorMap.end())
 			CreateNewEditor(&filePath);
 		else
 			editorToFocus = fileToEditorMap[filePath];
+	}
+	void OnFileShowInFolder(const std::string& filePath)
+	{
+		auto path = std::filesystem::path(filePath);
+		std::string parentFolderPath = path.parent_path().string();
+		std::string command = "explorer /select,\"" + path.string() + "\",\"" + parentFolderPath + "\"";
+		system(command.c_str());
+	}
+	void OnFolderShow(const std::string& folderPath)
+	{
+		std::string command = "explorer \"" + folderPath + "\"";
+		system(command.c_str());
 	}
 }
 
@@ -244,6 +256,8 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	auto f = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
 
 	DirectoryTreeView::SetOnFileClickCallback(OnFileClickedInFolderView);
+	DirectoryTreeView::AddFileContextMenuOption("Show in folder", OnFileShowInFolder);
+	DirectoryTreeView::AddFolderContextMenuOption("Show", OnFolderShow);
 }
 
 bool ste::ImGuiController::HasControl()
@@ -260,6 +274,8 @@ void ste::ImGuiController::Tick(float deltaTime)
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	ImGui::DockSpaceOverViewport();
+
+	ImGui::ShowDemoWindow();
 
 	if (menuBarEnabled)
 	{
