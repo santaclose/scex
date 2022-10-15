@@ -17,7 +17,8 @@ namespace DirectoryTreeView
 	std::unordered_map<std::string, DirectoryNode> treePerDirectory;
 	onFileClickCallback fileClickCallback = nullptr;
 
-	const DirectoryNode* hoveredNode = nullptr;
+	bool isHoveringNodeThisFrame = false;
+	const DirectoryNode* lastHoveredNode = nullptr;
 	std::vector<std::pair<std::string, onContextMenuCallback>> fileContextMenuOptions;
 	std::vector<std::pair<std::string, onContextMenuCallback>> folderContextMenuOptions;
 
@@ -46,6 +47,12 @@ namespace DirectoryTreeView
 
 		return rootNode;
 	}
+	
+	void SetLastHoveredNode(const DirectoryNode* node)
+	{
+		lastHoveredNode = node;
+		isHoveringNodeThisFrame = true;
+	}
 
 	void RecursivelyDisplayDirectoryNode(const DirectoryNode& parentNode)
 	{
@@ -55,7 +62,7 @@ namespace DirectoryTreeView
 			if (ImGui::TreeNodeEx(parentNode.FileName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth))
 			{
 				if (ImGui::IsItemHovered())
-					hoveredNode = &parentNode;
+					SetLastHoveredNode(&parentNode);
 				for (const DirectoryNode& childNode : parentNode.Children)
 					RecursivelyDisplayDirectoryNode(childNode);
 				ImGui::TreePop();
@@ -63,7 +70,7 @@ namespace DirectoryTreeView
 			else
 			{
 				if (ImGui::IsItemHovered())
-					hoveredNode = &parentNode;
+					SetLastHoveredNode(&parentNode);
 			}
 		}
 		else
@@ -77,7 +84,7 @@ namespace DirectoryTreeView
 				}
 			}
 			if (ImGui::IsItemHovered())
-				hoveredNode = &parentNode;
+				SetLastHoveredNode(&parentNode);
 		}
 		ImGui::PopID();
 	}
@@ -107,23 +114,24 @@ bool DirectoryTreeView::OnImGui(const std::string& directoryPath, const std::str
 	if (ImGui::Begin(panelName.c_str(), &windowIsOpen, ImGuiWindowFlags_NoSavedSettings))
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
+		isHoveringNodeThisFrame = false;
 		RecursivelyDisplayDirectoryNode(treePerDirectory[directoryPath]);
 
-		if (hoveredNode != nullptr)
+		if (lastHoveredNode != nullptr)
 		{
-			const auto& vectorToUse = hoveredNode->IsDirectory ? folderContextMenuOptions : fileContextMenuOptions;
-			if (ImGui::IsMouseDown(1))
+			const auto& vectorToUse = lastHoveredNode->IsDirectory ? folderContextMenuOptions : fileContextMenuOptions;
+			if (ImGui::IsMouseDown(1) && isHoveringNodeThisFrame)
 			{
 				if (vectorToUse.size() > 0)
-					ImGui::OpenPopup(hoveredNode->IsDirectory ? "folder_right_click_popup" : "file_right_click_popup");
+					ImGui::OpenPopup(lastHoveredNode->IsDirectory ? "folder_right_click_popup" : "file_right_click_popup");
 			}
-			if (vectorToUse.size() > 0 && ImGui::BeginPopup(hoveredNode->IsDirectory ? "folder_right_click_popup" : "file_right_click_popup"))
+			if (vectorToUse.size() > 0 && ImGui::BeginPopup(lastHoveredNode->IsDirectory ? "folder_right_click_popup" : "file_right_click_popup"))
 			{
 				for (auto& item : vectorToUse)
 				{
 					if (ImGui::Selectable(item.first.c_str()))
 					{
-						item.second(hoveredNode->IsDirectory ? hoveredNode->FullPath : hoveredNode->FullPath);
+						item.second(lastHoveredNode->IsDirectory ? lastHoveredNode->FullPath : lastHoveredNode->FullPath);
 						ImGui::CloseCurrentPopup();
 					}
 				}
