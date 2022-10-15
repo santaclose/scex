@@ -14,12 +14,12 @@ dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla par
 sunt in culpa qui officia deserunt mollit anim id est laborum."""
 loremIpsumLines = loremIpsum.split('\n')
 
-def waitAndClickOnImage(imagePath):
+def waitAndClickOnImage(imagePath, clicks=1):
 	point = None
 	while point is None:
 		point = pyautogui.locateCenterOnScreen(imagePath)
 	pyautogui.moveTo(point)
-	pyautogui.click()
+	pyautogui.click(clicks=clicks)
 
 def generateRandomText():
 	digits = ''.join(random.sample(string.digits, 8))
@@ -80,6 +80,46 @@ try:
 	assert(clipboardLines[2] == loremIpsumLines[3])
 	print("Ctrl shift k test passed")
 
+	pyautogui.write("asdf\n\tasdf\n\tasdf\n\nasdf\n\tasdf")
+	pyautogui.hotkey("ctrl", "a", interval=0.1)
+	pyautogui.hotkey("ctrl", "[", interval=0.1)
+	pyautogui.hotkey("ctrl", "c", interval=0.1)
+	assert(pyperclip.paste() == "asdf\nasdf\n\tasdf\n\t\n\tasdf\n\t\tasdf")
+	pyautogui.hotkey("ctrl", "[", interval=0.1)
+	pyautogui.hotkey("ctrl", "c", interval=0.1)
+	assert(pyperclip.paste() == "asdf\nasdf\nasdf\n\nasdf\n\tasdf")
+	pyautogui.hotkey("ctrl", "[", interval=0.1)
+	pyautogui.hotkey("ctrl", "c", interval=0.1)
+	assert(pyperclip.paste() == "asdf\nasdf\nasdf\n\nasdf\nasdf")
+	pyautogui.hotkey("ctrl", "]", interval=0.1)
+	pyautogui.hotkey("ctrl", "c", interval=0.1)
+	assert(pyperclip.paste() == "\tasdf\n\tasdf\n\tasdf\n\n\tasdf\n\tasdf")
+	print("Ctrl [ and ctrl ] test passed")
+
+	pyautogui.write("a b")
+	waitAndClickOnImage("testing/a.png", clicks=2)
+	pyautogui.keyDown('ctrl')
+	waitAndClickOnImage("testing/b.png", clicks=2)
+	pyautogui.keyUp('ctrl')
+	pyautogui.write("zxcv")
+	pyautogui.hotkey("ctrl", "a", interval=0.1)
+	pyautogui.hotkey("ctrl", "c", interval=0.1)
+	assert(pyperclip.paste() == "zxcv zxcv")
+	pyautogui.hotkey("ctrl", "z", interval=0.1)
+	pyautogui.hotkey("ctrl", "z", interval=0.1)
+	pyautogui.hotkey("ctrl", "z", interval=0.1)
+	pyautogui.hotkey("ctrl", "z", interval=0.1)
+	pyautogui.hotkey("ctrl", "a", interval=0.1)
+	pyautogui.hotkey("ctrl", "c", interval=0.1)
+	assert(pyperclip.paste() == "a b")
+	pyautogui.hotkey("ctrl", "shift", "z", interval=0.1)
+	pyautogui.hotkey("ctrl", "shift", "z", interval=0.1)
+	pyautogui.hotkey("ctrl", "shift", "z", interval=0.1)
+	pyautogui.hotkey("ctrl", "shift", "z", interval=0.1)
+	pyautogui.hotkey("ctrl", "a", interval=0.1)
+	pyautogui.hotkey("ctrl", "c", interval=0.1)
+	assert(pyperclip.paste() == "zxcv zxcv")
+	print("Multicursor replace and undo redo test passed")
 
 	# breakpoint()
 except Exception as e:
