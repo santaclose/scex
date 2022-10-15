@@ -27,6 +27,7 @@ namespace ste::ImGuiController
 		{".cc", &TextEditor::LanguageDefinition::CPlusPlus()},
 		{".hlsl", &TextEditor::LanguageDefinition::HLSL()},
 		{".glsl", &TextEditor::LanguageDefinition::GLSL()},
+		{".py", &TextEditor::LanguageDefinition::Python()},
 		{".c", &TextEditor::LanguageDefinition::C()},
 		{".h", &TextEditor::LanguageDefinition::C()},
 		{".sql", &TextEditor::LanguageDefinition::SQL()},
@@ -192,7 +193,7 @@ namespace ste::ImGuiController
 		ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor->GetTotalLines(),
 			editor->IsOverwrite() ? "Ovr" : "Ins",
 			editor->CanUndo() ? "*" : " ",
-			editor->GetLanguageDefinition().mName.c_str());
+			editor->GetLanguageDefinitionName());
 		editor->Render("TextEditor", isFocused);
 		ImGui::End();
 		return textEditors[editor].panelIsOpen;
