@@ -80,11 +80,11 @@ try:
 	assert(clipboardLines[2] == loremIpsumLines[3])
 	print("Ctrl shift k test passed")
 
-	pyautogui.write("asdf\n\tasdf\n\tasdf\n\nasdf\n\tasdf")
+	pyautogui.write("asdf\n\tasdf\n\t\tasdf\n\nasdf\n\t\t\tasdf")
 	pyautogui.hotkey("ctrl", "a", interval=0.1)
 	pyautogui.hotkey("ctrl", "[", interval=0.1)
 	pyautogui.hotkey("ctrl", "c", interval=0.1)
-	assert(pyperclip.paste() == "asdf\nasdf\n\tasdf\n\t\n\tasdf\n\t\tasdf")
+	assert(pyperclip.paste() == "asdf\nasdf\n\tasdf\n\nasdf\n\t\tasdf")
 	pyautogui.hotkey("ctrl", "[", interval=0.1)
 	pyautogui.hotkey("ctrl", "c", interval=0.1)
 	assert(pyperclip.paste() == "asdf\nasdf\nasdf\n\nasdf\n\tasdf")

@@ -278,8 +278,6 @@ void ste::ImGuiController::Tick(float deltaTime)
 	ImGui::NewFrame();
 	ImGui::DockSpaceOverViewport();
 
-	ImGui::ShowDemoWindow();
-
 	if (menuBarEnabled)
 	{
 		if (ImGui::BeginMainMenuBar())
