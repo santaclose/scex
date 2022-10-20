@@ -206,7 +206,7 @@ namespace ste::ImGuiController
 	// ---- Callbacks from folder view ---- //
 	void OnFileClickedInFolderView(const std::string& filePath)
 	{
-		if (fileToEditorMap.find(filePath) == fileToEditorMap.end())
+		if (fileToEditorMap.find(filePath) == fileToEditorMap.end() || fileToEditorMap[filePath] == nullptr)
 			CreateNewEditor(&filePath);
 		else
 			editorToFocus = fileToEditorMap[filePath];
@@ -345,6 +345,7 @@ void ste::ImGuiController::Tick(float deltaTime)
 	}
 	if (editorToDelete != nullptr)
 	{
+		fileToEditorMap[textEditors[editorToDelete].associatedFile] = nullptr;
 		delete editorToDelete;
 		textEditors.erase(editorToDelete);
 	}
