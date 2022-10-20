@@ -37,8 +37,8 @@ project "ste"
 		"src/**.h",
 		"src/**.hpp",
 		"src/**.cpp",
-		"vendor/ImGuiColorTextEdit/TextEditor.cpp",
-		"vendor/ImGuiDirectoryTreeView/DirectoryTreeView.cpp",
+		"vendor/ImGuiColorTextEdit/**.cpp",
+		"vendor/ImGuiDirectoryTreeView/**.cpp",
 		"vendor/load.cpp"
 	}
 
