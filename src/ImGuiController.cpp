@@ -124,7 +124,9 @@ namespace ste::ImGuiController
 							std::istreambuf_iterator<char>());
 						editor->SetText(str);
 						auto pathObject = std::filesystem::path(selection[0]);
-						editor->SetLanguageDefinition(*extensionToLanguageDefinition[pathObject.extension().string()]);
+						auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
+						if (lang != extensionToLanguageDefinition.end())
+							editor->SetLanguageDefinition(*extensionToLanguageDefinition[pathObject.extension().string()]);
 					}
 				}
 				if (ImGui::MenuItem("Save", "Ctrl+S"))
