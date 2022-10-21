@@ -92,7 +92,7 @@ namespace ste::ImGuiController
 
 	bool EditorTick(TextEditor* editor)
 	{
-		auto cpos = editor->GetCursorPosition();
+		//editor->ImGuiDebugPanel();
 		if (editorToFocus == editor)
 		{
 			ImGui::SetNextWindowFocus();
