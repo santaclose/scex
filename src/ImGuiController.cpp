@@ -47,6 +47,7 @@ namespace ste::ImGuiController
 		std::string panelName;
 		std::string associatedFile;
 		bool panelIsOpen = false;
+		int tabSize = 4;
 	};
 
 	struct FolderViewerInfo
@@ -196,6 +197,8 @@ namespace ste::ImGuiController
 					editor->SetPalette(TextEditor::GetLightPalette());
 				if (ImGui::MenuItem("Retro blue palette"))
 					editor->SetPalette(TextEditor::GetRetroBluePalette());
+				ImGui::SliderInt("Tab size", &textEditors[editor].tabSize, 1, 8);
+				editor->SetTabSize(textEditors[editor].tabSize);
 				ImGui::EndMenu();
 			}
 
