@@ -93,11 +93,13 @@ namespace ste::ImGuiController
 			ImGui::SetNextWindowFocus();
 			editorToFocus = nullptr;
 		}
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
 		ImGui::Begin(textEditors[editor].panelName.c_str(), &(textEditors[editor].panelIsOpen),
 			ImGuiWindowFlags_HorizontalScrollbar |
 			ImGuiWindowFlags_MenuBar |
 			ImGuiWindowFlags_NoSavedSettings |
 			(editor->CanUndo() ? ImGuiWindowFlags_UnsavedDocument : 0x0));
+		ImGui::PopStyleVar();
 
 		bool isFocused = ImGui::IsWindowFocused();
 		ImGui::SetWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
