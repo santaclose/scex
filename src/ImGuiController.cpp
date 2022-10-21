@@ -14,6 +14,11 @@
 #include <portable-file-dialogs.h>
 #include <DirectoryTreeView.h>
 
+#define DEFAULT_TEXT_EDITOR_WIDTH 800
+#define DEFAULT_TEXT_EDITOR_HEIGHT 600
+#define DEFAULT_FOLDER_VIEW_WIDTH 250
+#define DEFAULT_FOLDER_VIEW_HEIGHT 600
+
 namespace ste::ImGuiController
 {
 	bool menuBarEnabled = true;
@@ -102,7 +107,7 @@ namespace ste::ImGuiController
 		ImGui::PopStyleVar();
 
 		bool isFocused = ImGui::IsWindowFocused();
-		ImGui::SetWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
+		ImGui::SetWindowSize(ImVec2(DEFAULT_TEXT_EDITOR_WIDTH, DEFAULT_TEXT_EDITOR_HEIGHT), ImGuiCond_FirstUseEver);
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
@@ -193,13 +198,15 @@ namespace ste::ImGuiController
 					editor->SetPalette(TextEditor::GetRetroBluePalette());
 				ImGui::EndMenu();
 			}
+
+			auto cpos = editor->GetCursorPosition();
+			ImGui::Text("%6d/%-6d %6d lines | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor->GetTotalLines(),
+				editor->IsOverwrite() ? "Ovr" : "Ins",
+				editor->GetLanguageDefinitionName());
+
 			ImGui::EndMenuBar();
 		}
 
-		ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor->GetTotalLines(),
-			editor->IsOverwrite() ? "Ovr" : "Ins",
-			editor->CanUndo() ? "*" : " ",
-			editor->GetLanguageDefinitionName());
 		editor->Render("TextEditor", isFocused);
 		ImGui::End();
 		return textEditors[editor].panelIsOpen;
@@ -329,6 +336,7 @@ void ste::ImGuiController::Tick(float deltaTime)
 	int i = 0, folderViewerToDelete = -1;
 	for (auto& folderViewer : folderViewers)
 	{
+		ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
 		if (!DirectoryTreeView::OnImGui(folderViewer.folderPath, folderViewer.panelName))
 			folderViewerToDelete = i;
 		i++;
