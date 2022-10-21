@@ -181,7 +181,7 @@ namespace ste::ImGuiController
 				ImGui::Separator();
 
 				if (ImGui::MenuItem("Select all", nullptr, nullptr))
-					editor->SetSelection(TextEditor::Coordinates(), TextEditor::Coordinates(editor->GetTotalLines(), 0));
+					editor->SelectAll();
 
 				ImGui::EndMenu();
 			}
