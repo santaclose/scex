@@ -6,13 +6,8 @@
 
 #include <ImGuiController.h>
 
+#define REDRAW_COUNT 5
 #define BACKGROUND_COLOR 0.1
-
-float gameTime = 0.0;
-double lastFrameTime = 0.0;
-double currentFrameTime = 0.0;
-double deltaTime = 0.0;
-bool deltaTimeLock = true;
 
 #ifdef STE_DEBUG
 void APIENTRY glDebugOutput(GLenum source,
@@ -65,6 +60,7 @@ void APIENTRY glDebugOutput(GLenum source,
 
 int main(int argc, char** argv)
 {
+	int redrawCounter = REDRAW_COUNT;
 	if (!std::filesystem::is_directory("assets"))
 	{
 		std::filesystem::current_path("../../../");
@@ -117,28 +113,22 @@ int main(int argc, char** argv)
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
-		if (deltaTimeLock)
-		{
-			currentFrameTime = lastFrameTime = glfwGetTime();
-			deltaTimeLock = false;
-		}
-		else
-			currentFrameTime = glfwGetTime();
-		deltaTime = currentFrameTime - lastFrameTime;
-
-		gameTime += deltaTime;
-
 		/* Draw scene */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		ste::ImGuiController::Tick(deltaTime);
+		ste::ImGuiController::Tick();
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
 
 		/* Poll for and process events */
+		if (redrawCounter == 0)
+		{
+			glfwWaitEvents();
+			redrawCounter = REDRAW_COUNT;
+		}
+		else
+			redrawCounter--;
 		glfwPollEvents();
-
-		lastFrameTime = currentFrameTime;
 	}
 
 	glfwTerminate();

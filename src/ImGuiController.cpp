@@ -22,7 +22,7 @@
 namespace ste::ImGuiController
 {
 	bool menuBarEnabled = true;
-	bool statsEnabled = false;
+	bool perPanelDebugInfo = false;
 	int editorIdCounter = 0;
 	int folderViewerIdCounter = 0;
 
@@ -91,9 +91,10 @@ namespace ste::ImGuiController
 		folderViewerIdCounter++;
 	}
 
-	bool EditorTick(TextEditor* editor)
+	bool EditorTick(TextEditor* editor, bool showDebugPanel = false)
 	{
-		//editor->ImGuiDebugPanel();
+		if (showDebugPanel)
+			editor->ImGuiDebugPanel("Debug " + textEditors[editor].panelName);
 		if (editorToFocus == editor)
 		{
 			ImGui::SetNextWindowFocus();
@@ -101,7 +102,6 @@ namespace ste::ImGuiController
 		}
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
 		ImGui::Begin(textEditors[editor].panelName.c_str(), &(textEditors[editor].panelIsOpen),
-			ImGuiWindowFlags_HorizontalScrollbar |
 			ImGuiWindowFlags_MenuBar |
 			ImGuiWindowFlags_NoSavedSettings |
 			(editor->CanUndo() ? ImGuiWindowFlags_UnsavedDocument : 0x0));
@@ -282,7 +282,7 @@ bool ste::ImGuiController::HasControl()
 	return ImGui::GetIO().WantCaptureMouse;
 }
 
-void ste::ImGuiController::Tick(float deltaTime)
+void ste::ImGuiController::Tick()
 {
 	if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F1)))
 		menuBarEnabled = !menuBarEnabled;
@@ -321,19 +321,11 @@ void ste::ImGuiController::Tick(float deltaTime)
 			}
 			if (ImGui::BeginMenu("debug"))
 			{
-				ImGui::MenuItem("Stats", NULL, &statsEnabled);
+				ImGui::MenuItem("Per panel info", NULL, &perPanelDebugInfo);
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
 		}
-	}
-
-	if (statsEnabled)
-	{
-		ImGui::Begin("Stats");
-		ImGui::Text("Frame time: %.3f ms", 1000.0f * deltaTime);
-		ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
-		ImGui::End();
 	}
 
 	int i = 0, folderViewerToDelete = -1;
@@ -352,7 +344,7 @@ void ste::ImGuiController::Tick(float deltaTime)
 	{
 		if (editor.first != nullptr)
 		{
-			if (!EditorTick(editor.first))
+			if (!EditorTick(editor.first, perPanelDebugInfo))
 				editorToDelete = editor.first;
 		}
 	}

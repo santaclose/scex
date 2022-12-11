@@ -6,5 +6,5 @@ namespace ste::ImGuiController
 {
 	void Setup(GLFWwindow* window);
 	bool HasControl();
-	void Tick(float deltaTime);
+	void Tick();
 }
