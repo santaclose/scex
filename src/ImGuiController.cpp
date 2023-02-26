@@ -13,6 +13,7 @@
 #include <json.hpp>
 #include <portable-file-dialogs.h>
 #include <DirectoryTreeView.h>
+#include <DirectoryFinder.h>
 
 #define DEFAULT_TEXT_EDITOR_WIDTH 800
 #define DEFAULT_TEXT_EDITOR_HEIGHT 600
@@ -62,8 +63,9 @@ namespace ste::ImGuiController
 
 	std::unordered_map<TextEditor*, TextEditorInfo> textEditors;
 	std::vector<FolderViewerInfo> folderViewers;
+	std::vector<DirectoryFinder*> folderFinders;
 
-	void CreateNewEditor(const std::string* filePath = nullptr)
+	TextEditor* CreateNewEditor(const std::string* filePath = nullptr)
 	{
 		TextEditor* editor = new TextEditor();
 		if (filePath == nullptr)
@@ -83,12 +85,19 @@ namespace ste::ImGuiController
 				editor->SetLanguageDefinition(*(*lang).second);
 		}
 		editorIdCounter++;
+		return editor;
 	}
 
 	void CreateNewFolderViewer(const std::string& folderPath)
 	{
 		folderViewers.push_back({ folderViewerIdCounter, "Folder view##" + std::to_string(folderViewerIdCounter), folderPath});
 		folderViewerIdCounter++;
+	}
+
+	void OnFolderSearchResultClick(const DirectoryFinderSearchResult& directoryFinderSearchResult);
+	void CreateNewFolderSearch(const std::string& folderPath)
+	{
+		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick));
 	}
 
 	bool EditorTick(TextEditor* editor, bool showDebugPanel = false)
@@ -235,6 +244,22 @@ namespace ste::ImGuiController
 		std::string command = "explorer \"" + folderPath + "\"";
 		system(command.c_str());
 	}
+	void OnFindInFolder(const std::string& folderPath)
+	{
+		CreateNewFolderSearch(folderPath);
+	}
+
+	// ---- Callback from folder finder ---- //
+	void OnFolderSearchResultClick(const DirectoryFinderSearchResult& searchResult)
+	{
+		TextEditor* targetEditor;
+		if (fileToEditorMap.find(searchResult.filePath) == fileToEditorMap.end() || fileToEditorMap[searchResult.filePath] == nullptr)
+			targetEditor = CreateNewEditor(&searchResult.filePath);
+		else
+			targetEditor = editorToFocus = fileToEditorMap[searchResult.filePath];
+		targetEditor->SetCursorPosition(searchResult.line - 1, searchResult.endCharIndex);
+		targetEditor->SetSelection(searchResult.line - 1, searchResult.startCharIndex, searchResult.line - 1, searchResult.endCharIndex);
+	}
 }
 
 void ste::ImGuiController::Setup(GLFWwindow* window)
@@ -275,6 +300,7 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	DirectoryTreeView::SetOnFileClickCallback(OnFileClickedInFolderView);
 	DirectoryTreeView::AddFileContextMenuOption("Show in folder", OnFileShowInFolder);
 	DirectoryTreeView::AddFolderContextMenuOption("Show", OnFolderShow);
+	DirectoryTreeView::AddFolderContextMenuOption("Find in folder", OnFindInFolder);
 }
 
 bool ste::ImGuiController::HasControl()
@@ -328,16 +354,35 @@ void ste::ImGuiController::Tick()
 		}
 	}
 
-	int i = 0, folderViewerToDelete = -1;
-	for (auto& folderViewer : folderViewers)
 	{
-		ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
-		if (!DirectoryTreeView::OnImGui(folderViewer.folderPath, folderViewer.panelName))
-			folderViewerToDelete = i;
-		i++;
+		int i = 0, folderViewerToDelete = -1;
+		for (auto& folderViewer : folderViewers)
+		{
+			ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
+			if (!DirectoryTreeView::OnImGui(folderViewer.folderPath, folderViewer.panelName))
+				folderViewerToDelete = i;
+			i++;
+		}
+		if (folderViewerToDelete > -1)
+			folderViewers.erase(folderViewers.begin() + folderViewerToDelete);
 	}
-	if (folderViewerToDelete > -1)
-		folderViewers.erase(folderViewers.begin() + folderViewerToDelete);
+	{
+		int finderToDelete = -1;
+		for (int i = 0; i < folderFinders.size(); i++)
+		{
+			DirectoryFinder* finder = folderFinders[i];
+			if (finder == nullptr)
+				continue;
+				ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
+			if (!finder->OnImGui())
+				finderToDelete = i;
+		}
+		if (finderToDelete > -1)
+		{
+			delete folderFinders[finderToDelete];
+			folderFinders[finderToDelete] = nullptr;
+		}
+	}
 
 	TextEditor* editorToDelete = nullptr;
 	for (auto editor : textEditors)

@@ -39,6 +39,7 @@ project "ste"
 		"src/**.cpp",
 		"vendor/ImGuiColorTextEdit/**.cpp",
 		"vendor/ImGuiDirectoryTreeView/**.cpp",
+		"vendor/ImGuiDirectoryFinder/**.cpp",
 		"vendor/load.cpp"
 	}
 
@@ -55,6 +56,7 @@ project "ste"
 		"vendor/imgui",
 		"vendor/ImGuiColorTextEdit",
 		"vendor/ImGuiDirectoryTreeView",
+		"vendor/ImGuiDirectoryFinder",
 		"vendor/json",
 		"vendor/portable-file-dialogs"
 	}
