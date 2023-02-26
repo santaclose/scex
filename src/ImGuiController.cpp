@@ -12,8 +12,8 @@
 #include <TextEditor.h>
 #include <json.hpp>
 #include <portable-file-dialogs.h>
-#include <DirectoryTreeView.h>
-#include <DirectoryFinder.h>
+#include <panels/DirectoryTreeView.h>
+#include <panels/DirectoryFinder.h>
 
 #define DEFAULT_TEXT_EDITOR_WIDTH 800
 #define DEFAULT_TEXT_EDITOR_HEIGHT 600
@@ -22,10 +22,16 @@
 
 namespace ste::ImGuiController
 {
+	// ---- Callback declarations ---- //
+	void OnFileClickedInFolderView(const std::string& filePath);
+	void OnFileShowInFolder(const std::string& filePath);
+	void OnFolderShow(const std::string& folderPath);
+	void OnFindInFolder(const std::string& folderPath);
+	void OnFolderSearchResultClick(const DirectoryFinderSearchResult& searchResult);
+
 	bool menuBarEnabled = true;
 	bool perPanelDebugInfo = false;
 	int editorIdCounter = 0;
-	int folderViewerIdCounter = 0;
 
 	std::unordered_map<std::string, const TextEditor::LanguageDefinition*> extensionToLanguageDefinition = {
 		{".cpp", &TextEditor::LanguageDefinition::CPlusPlus()},
@@ -51,19 +57,16 @@ namespace ste::ImGuiController
 		int tabSize = 4;
 	};
 
-	struct FolderViewerInfo
-	{
-		int id;
-		std::string panelName;
-		std::string folderPath;
-	};
-
 	std::unordered_map<std::string, TextEditor*> fileToEditorMap;
 	TextEditor* editorToFocus = nullptr;
 
 	std::unordered_map<TextEditor*, TextEditorInfo> textEditors;
-	std::vector<FolderViewerInfo> folderViewers;
+
 	std::vector<DirectoryFinder*> folderFinders;
+	std::vector<DirectoryTreeView*> folderViewers;
+
+	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFileContextMenuOptions = { {"Show in folder", OnFileShowInFolder} };
+	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFolderContextMenuOptions = { {"Show", OnFolderShow}, {"Find in folder", OnFindInFolder} };
 
 	TextEditor* CreateNewEditor(const std::string* filePath = nullptr)
 	{
@@ -90,11 +93,8 @@ namespace ste::ImGuiController
 
 	void CreateNewFolderViewer(const std::string& folderPath)
 	{
-		folderViewers.push_back({ folderViewerIdCounter, "Folder view##" + std::to_string(folderViewerIdCounter), folderPath});
-		folderViewerIdCounter++;
+		folderViewers.push_back(new DirectoryTreeView(folderPath, OnFileClickedInFolderView, &folderViewFileContextMenuOptions, &folderViewFolderContextMenuOptions));
 	}
-
-	void OnFolderSearchResultClick(const DirectoryFinderSearchResult& directoryFinderSearchResult);
 	void CreateNewFolderSearch(const std::string& folderPath)
 	{
 		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick));
@@ -295,12 +295,7 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
-	auto f = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
-
-	DirectoryTreeView::SetOnFileClickCallback(OnFileClickedInFolderView);
-	DirectoryTreeView::AddFileContextMenuOption("Show in folder", OnFileShowInFolder);
-	DirectoryTreeView::AddFolderContextMenuOption("Show", OnFolderShow);
-	DirectoryTreeView::AddFolderContextMenuOption("Find in folder", OnFindInFolder);
+	io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
 }
 
 bool ste::ImGuiController::HasControl()
@@ -355,16 +350,21 @@ void ste::ImGuiController::Tick()
 	}
 
 	{
-		int i = 0, folderViewerToDelete = -1;
-		for (auto& folderViewer : folderViewers)
+		int folderViewToDelete = -1;
+		for (int i = 0; i < folderViewers.size(); i++)
 		{
+			DirectoryTreeView* folderView = folderViewers[i];
+			if (folderView == nullptr)
+				continue;
 			ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
-			if (!DirectoryTreeView::OnImGui(folderViewer.folderPath, folderViewer.panelName))
-				folderViewerToDelete = i;
-			i++;
+			if (!folderView->OnImGui())
+				folderViewToDelete = i;
 		}
-		if (folderViewerToDelete > -1)
-			folderViewers.erase(folderViewers.begin() + folderViewerToDelete);
+		if (folderViewToDelete > -1)
+		{
+			delete folderViewers[folderViewToDelete];
+			folderViewers[folderViewToDelete] = nullptr;
+		}
 	}
 	{
 		int finderToDelete = -1;
