@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <unordered_map>
 
-// taken from samyuu at https://github.com/ocornut/imgui/issues/5137
+// adaptation of samyuu's code at https://github.com/ocornut/imgui/issues/5137
 namespace DirectoryTreeView
 {
 	struct DirectoryNode
@@ -15,12 +15,12 @@ namespace DirectoryTreeView
 	};
 
 	std::unordered_map<std::string, DirectoryNode> treePerDirectory;
-	onFileClickCallback fileClickCallback = nullptr;
+	OnFileClickCallback fileClickCallback = nullptr;
 
 	bool isHoveringNodeThisFrame = false;
 	const DirectoryNode* lastHoveredNode = nullptr;
-	std::vector<std::pair<std::string, onContextMenuCallback>> fileContextMenuOptions;
-	std::vector<std::pair<std::string, onContextMenuCallback>> folderContextMenuOptions;
+	std::vector<std::pair<std::string, OnContextMenuCallback>> fileContextMenuOptions;
+	std::vector<std::pair<std::string, OnContextMenuCallback>> folderContextMenuOptions;
 
 	void RecursivelyAddDirectoryNodes(DirectoryNode& parentNode, std::filesystem::directory_iterator directoryIterator)
 	{
@@ -37,7 +37,7 @@ namespace DirectoryTreeView
 		std::sort(parentNode.Children.begin(), parentNode.Children.end(), moveDirectoriesToFront);
 	}
 
-	DirectoryNode CreateDirectryNodeTreeFromPath(const std::filesystem::path& rootPath)
+	DirectoryNode CreateDirectoryNodeTreeFromPath(const std::filesystem::path& rootPath)
 	{
 		DirectoryNode rootNode;
 		rootNode.FullPath = rootPath.u8string();
@@ -90,17 +90,17 @@ namespace DirectoryTreeView
 	}
 }
 
-void DirectoryTreeView::SetOnFileClickCallback(onFileClickCallback callback)
+void DirectoryTreeView::SetOnFileClickCallback(OnFileClickCallback callback)
 {
 	fileClickCallback = callback;
 }
 
-void DirectoryTreeView::AddFileContextMenuOption(const std::string& name, onContextMenuCallback callback)
+void DirectoryTreeView::AddFileContextMenuOption(const std::string& name, OnContextMenuCallback callback)
 {
 	fileContextMenuOptions.push_back({ name, callback });
 }
 
-void DirectoryTreeView::AddFolderContextMenuOption(const std::string& name, onContextMenuCallback callback)
+void DirectoryTreeView::AddFolderContextMenuOption(const std::string& name, OnContextMenuCallback callback)
 {
 	folderContextMenuOptions.push_back({ name, callback });
 }
@@ -109,7 +109,7 @@ bool DirectoryTreeView::OnImGui(const std::string& directoryPath, const std::str
 {
 	bool windowIsOpen = true;
 	if (treePerDirectory.find(directoryPath) == treePerDirectory.end())
-		treePerDirectory[directoryPath] = CreateDirectryNodeTreeFromPath(directoryPath);
+		treePerDirectory[directoryPath] = CreateDirectoryNodeTreeFromPath(directoryPath);
 
 	if (ImGui::Begin(panelName.c_str(), &windowIsOpen, ImGuiWindowFlags_NoSavedSettings))
 	{
