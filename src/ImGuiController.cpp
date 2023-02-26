@@ -9,11 +9,12 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <imgui.h>
 
-#include <TextEditor.h>
 #include <json.hpp>
 #include <portable-file-dialogs.h>
+
 #include <panels/DirectoryTreeView.h>
 #include <panels/DirectoryFinder.h>
+#include <panels/FileTextEdit.h>
 
 #define DEFAULT_TEXT_EDITOR_WIDTH 800
 #define DEFAULT_TEXT_EDITOR_HEIGHT 600
@@ -30,65 +31,22 @@ namespace ste::ImGuiController
 	void OnFolderSearchResultClick(const DirectoryFinderSearchResult& searchResult);
 
 	bool menuBarEnabled = true;
-	bool perPanelDebugInfo = false;
-	int editorIdCounter = 0;
+	bool textEditDebugInfo = false;
 
-	std::unordered_map<std::string, const TextEditor::LanguageDefinition*> extensionToLanguageDefinition = {
-		{".cpp", &TextEditor::LanguageDefinition::CPlusPlus()},
-		{".hpp", &TextEditor::LanguageDefinition::CPlusPlus()},
-		{".cc", &TextEditor::LanguageDefinition::CPlusPlus()},
-		{".hlsl", &TextEditor::LanguageDefinition::HLSL()},
-		{".glsl", &TextEditor::LanguageDefinition::GLSL()},
-		{".py", &TextEditor::LanguageDefinition::Python()},
-		{".c", &TextEditor::LanguageDefinition::C()},
-		{".h", &TextEditor::LanguageDefinition::C()},
-		{".sql", &TextEditor::LanguageDefinition::SQL()},
-		{".as", &TextEditor::LanguageDefinition::AngelScript()},
-		{".lua",& TextEditor::LanguageDefinition::Lua()}
-	};
-
-	struct TextEditorInfo
-	{
-		int id;
-		bool hasAssociatedFile = false;
-		std::string panelName;
-		std::string associatedFile;
-		bool panelIsOpen = false;
-		int tabSize = 4;
-	};
-
-	std::unordered_map<std::string, TextEditor*> fileToEditorMap;
-	TextEditor* editorToFocus = nullptr;
-
-	std::unordered_map<TextEditor*, TextEditorInfo> textEditors;
+	std::unordered_map<std::string, FileTextEdit*> fileToEditorMap;
+	FileTextEdit* editorToFocus = nullptr;
 
 	std::vector<DirectoryFinder*> folderFinders;
 	std::vector<DirectoryTreeView*> folderViewers;
+	std::vector<FileTextEdit*> fileTextEdits;
 
 	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFileContextMenuOptions = { {"Show in folder", OnFileShowInFolder} };
 	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFolderContextMenuOptions = { {"Show", OnFolderShow}, {"Find in folder", OnFindInFolder} };
 
-	TextEditor* CreateNewEditor(const std::string* filePath = nullptr)
+	FileTextEdit* CreateNewEditor(const char* filePath = nullptr)
 	{
-		TextEditor* editor = new TextEditor();
-		if (filePath == nullptr)
-			textEditors.insert({ editor, {editorIdCounter, false, "untitled##" + std::to_string(editorIdCounter), "", true} });
-		else
-		{
-			auto pathObject = std::filesystem::path(*filePath);
-			textEditors.insert({ editor, { editorIdCounter, true, pathObject.filename().string(), *filePath, true} });
-			textEditors[editor].panelName += "##" + std::to_string(editorIdCounter);
-			fileToEditorMap[*filePath] = editor;
-			std::ifstream t(*filePath);
-			std::string str((std::istreambuf_iterator<char>(t)),
-				std::istreambuf_iterator<char>());
-			editor->SetText(str);
-			auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
-			if (lang != extensionToLanguageDefinition.end())
-				editor->SetLanguageDefinition(*(*lang).second);
-		}
-		editorIdCounter++;
-		return editor;
+		fileTextEdits.push_back(new FileTextEdit(filePath));
+		return fileTextEdits.back();
 	}
 
 	void CreateNewFolderViewer(const std::string& folderPath)
@@ -100,135 +58,11 @@ namespace ste::ImGuiController
 		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick));
 	}
 
-	bool EditorTick(TextEditor* editor, bool showDebugPanel = false)
-	{
-		if (showDebugPanel)
-			editor->ImGuiDebugPanel("Debug " + textEditors[editor].panelName);
-		if (editorToFocus == editor)
-		{
-			ImGui::SetNextWindowFocus();
-			editorToFocus = nullptr;
-		}
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
-		ImGui::Begin(textEditors[editor].panelName.c_str(), &(textEditors[editor].panelIsOpen),
-			ImGuiWindowFlags_MenuBar |
-			ImGuiWindowFlags_NoSavedSettings |
-			(editor->CanUndo() ? ImGuiWindowFlags_UnsavedDocument : 0x0));
-		ImGui::PopStyleVar();
-
-		bool isFocused = ImGui::IsWindowFocused();
-		ImGui::SetWindowSize(ImVec2(DEFAULT_TEXT_EDITOR_WIDTH, DEFAULT_TEXT_EDITOR_HEIGHT), ImGuiCond_FirstUseEver);
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (textEditors[editor].hasAssociatedFile && ImGui::MenuItem("Reload", "Ctrl+R"))
-				{
-					std::ifstream t(textEditors[editor].associatedFile);
-					std::string str((std::istreambuf_iterator<char>(t)),
-						std::istreambuf_iterator<char>());
-					editor->SetText(str);
-				}
-				if (ImGui::MenuItem("Load from"))
-				{
-					std::vector<std::string> selection = pfd::open_file("Open file", "", { "Any file", "*" }).result();
-					if (selection.size() == 0)
-						std::cout << "File not loaded\n";
-					else
-					{
-						std::ifstream t(selection[0]);
-						std::string str((std::istreambuf_iterator<char>(t)),
-							std::istreambuf_iterator<char>());
-						editor->SetText(str);
-						auto pathObject = std::filesystem::path(selection[0]);
-						auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
-						if (lang != extensionToLanguageDefinition.end())
-							editor->SetLanguageDefinition(*extensionToLanguageDefinition[pathObject.extension().string()]);
-					}
-				}
-				if (ImGui::MenuItem("Save", "Ctrl+S"))
-				{
-					std::string textToSave = editor->GetText();
-					std::string destination = textEditors[editor].hasAssociatedFile ?
-						textEditors[editor].associatedFile :
-						pfd::save_file("Save file", "", { "Any file", "*" }).result();
-					if (destination.length() > 0)
-					{
-						textEditors[editor].associatedFile = destination;
-						textEditors[editor].hasAssociatedFile = true;
-						textEditors[editor].panelName = std::filesystem::path(destination).filename().string() + "##" + std::to_string(textEditors[editor].id);
-						std::ofstream outFile;
-						outFile.open(destination);
-						outFile << textToSave;
-						outFile.close();
-					}
-				}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Edit"))
-			{
-				bool ro = editor->IsReadOnly();
-				if (ImGui::MenuItem("Read-only mode", nullptr, &ro))
-					editor->SetReadOnly(ro);
-				ImGui::Separator();
-
-				if (ImGui::MenuItem("Undo", "ALT-Backspace", nullptr, !ro && editor->CanUndo()))
-					editor->Undo();
-				if (ImGui::MenuItem("Redo", "Ctrl+Y", nullptr, !ro && editor->CanRedo()))
-					editor->Redo();
-
-				ImGui::Separator();
-
-				if (ImGui::MenuItem("Copy", "Ctrl+C", nullptr, editor->HasSelection()))
-					editor->Copy();
-				if (ImGui::MenuItem("Cut", "Ctrl+X", nullptr, !ro && editor->HasSelection()))
-					editor->Cut();
-				if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor->HasSelection()))
-					editor->Delete();
-				if (ImGui::MenuItem("Paste", "Ctrl+V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
-					editor->Paste();
-
-				ImGui::Separator();
-
-				if (ImGui::MenuItem("Select all", nullptr, nullptr))
-					editor->SelectAll();
-
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("View"))
-			{
-				if (ImGui::MenuItem("Mariana palette"))
-					editor->SetPalette(TextEditor::GetMarianaPalette());
-				if (ImGui::MenuItem("Dark palette"))
-					editor->SetPalette(TextEditor::GetDarkPalette());
-				if (ImGui::MenuItem("Light palette"))
-					editor->SetPalette(TextEditor::GetLightPalette());
-				if (ImGui::MenuItem("Retro blue palette"))
-					editor->SetPalette(TextEditor::GetRetroBluePalette());
-				ImGui::SliderInt("Tab size", &textEditors[editor].tabSize, 1, 8);
-				editor->SetTabSize(textEditors[editor].tabSize);
-				ImGui::EndMenu();
-			}
-
-			auto cpos = editor->GetCursorPosition();
-			ImGui::Text("%6d/%-6d %6d lines | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor->GetTotalLines(),
-				editor->IsOverwrite() ? "Ovr" : "Ins",
-				editor->GetLanguageDefinitionName());
-
-			ImGui::EndMenuBar();
-		}
-
-		editor->Render("TextEditor", isFocused);
-		ImGui::End();
-		return textEditors[editor].panelIsOpen;
-	}
-
 	// ---- Callbacks from folder view ---- //
 	void OnFileClickedInFolderView(const std::string& filePath)
 	{
 		if (fileToEditorMap.find(filePath) == fileToEditorMap.end() || fileToEditorMap[filePath] == nullptr)
-			CreateNewEditor(&filePath);
+			fileToEditorMap[filePath] = CreateNewEditor(filePath.c_str());
 		else
 			editorToFocus = fileToEditorMap[filePath];
 	}
@@ -252,12 +86,11 @@ namespace ste::ImGuiController
 	// ---- Callback from folder finder ---- //
 	void OnFolderSearchResultClick(const DirectoryFinderSearchResult& searchResult)
 	{
-		TextEditor* targetEditor;
+		FileTextEdit* targetEditor;
 		if (fileToEditorMap.find(searchResult.filePath) == fileToEditorMap.end() || fileToEditorMap[searchResult.filePath] == nullptr)
-			targetEditor = CreateNewEditor(&searchResult.filePath);
+			targetEditor = fileToEditorMap[searchResult.filePath] = CreateNewEditor(searchResult.filePath.c_str());
 		else
 			targetEditor = editorToFocus = fileToEditorMap[searchResult.filePath];
-		targetEditor->SetCursorPosition(searchResult.line - 1, searchResult.endCharIndex);
 		targetEditor->SetSelection(searchResult.line - 1, searchResult.startCharIndex, searchResult.line - 1, searchResult.endCharIndex);
 	}
 }
@@ -327,7 +160,7 @@ void ste::ImGuiController::Tick()
 					if (selection.size() == 0)
 						std::cout << "File not loaded\n";
 					else
-						CreateNewEditor(&(selection[0]));
+						fileToEditorMap[selection[0]] = CreateNewEditor(selection[0].c_str());
 				}
 				if (ImGui::MenuItem("Open folder"))
 				{
@@ -342,7 +175,7 @@ void ste::ImGuiController::Tick()
 			}
 			if (ImGui::BeginMenu("debug"))
 			{
-				ImGui::MenuItem("Per panel info", NULL, &perPanelDebugInfo);
+				ImGui::MenuItem("Per panel info", NULL, &textEditDebugInfo);
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
@@ -373,7 +206,7 @@ void ste::ImGuiController::Tick()
 			DirectoryFinder* finder = folderFinders[i];
 			if (finder == nullptr)
 				continue;
-				ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
 			if (!finder->OnImGui())
 				finderToDelete = i;
 		}
@@ -383,21 +216,29 @@ void ste::ImGuiController::Tick()
 			folderFinders[finderToDelete] = nullptr;
 		}
 	}
-
-	TextEditor* editorToDelete = nullptr;
-	for (auto editor : textEditors)
 	{
-		if (editor.first != nullptr)
+		int fileTextEditToDelete = -1;
+		for (int i = 0; i < fileTextEdits.size(); i++)
 		{
-			if (!EditorTick(editor.first, perPanelDebugInfo))
-				editorToDelete = editor.first;
+			FileTextEdit* fte = fileTextEdits[i];
+			if (fte == nullptr)
+				continue;
+			ImGui::SetNextWindowSize(ImVec2(DEFAULT_TEXT_EDITOR_WIDTH, DEFAULT_TEXT_EDITOR_HEIGHT), ImGuiCond_FirstUseEver);
+			if (editorToFocus == fte)
+			{
+				ImGui::SetNextWindowFocus();
+				editorToFocus = nullptr;
+			}
+			if (!fte->OnImGui())
+				fileTextEditToDelete = i;
 		}
-	}
-	if (editorToDelete != nullptr)
-	{
-		fileToEditorMap[textEditors[editorToDelete].associatedFile] = nullptr;
-		delete editorToDelete;
-		textEditors.erase(editorToDelete);
+		if (fileTextEditToDelete > -1)
+		{
+			if (fileTextEdits[fileTextEditToDelete]->hasAssociatedFile)
+				fileToEditorMap.erase(fileTextEdits[fileTextEditToDelete]->associatedFile);
+			delete fileTextEdits[fileTextEditToDelete];
+			fileTextEdits[fileTextEditToDelete] = nullptr;
+		}
 	}
 
 	// Render dear imgui into screen
