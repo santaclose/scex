@@ -33,7 +33,7 @@ bool DirectoryTreeView::OnImGui()
 				{
 					if (ImGui::Selectable(item.first.c_str()))
 					{
-						item.second(lastHoveredNode->isDirectory ? lastHoveredNode->fullPath : lastHoveredNode->fullPath);
+						item.second(lastHoveredNode->fullPath, id);
 						ImGui::CloseCurrentPopup();
 					}
 				}
