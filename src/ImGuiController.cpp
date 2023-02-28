@@ -46,6 +46,7 @@ namespace ste::ImGuiController
 	FileTextEdit* CreateNewEditor(const char* filePath = nullptr)
 	{
 		fileTextEdits.push_back(new FileTextEdit(filePath));
+		fileTextEdits.back()->showDebugPanel = textEditDebugInfo;
 		return fileTextEdits.back();
 	}
 
@@ -175,7 +176,15 @@ void ste::ImGuiController::Tick()
 			}
 			if (ImGui::BeginMenu("debug"))
 			{
-				ImGui::MenuItem("Per panel info", NULL, &textEditDebugInfo);
+				if (ImGui::MenuItem("Per panel info", NULL, &textEditDebugInfo))
+				{
+					for (FileTextEdit* fte : fileTextEdits)
+					{
+						if (fte == nullptr)
+							continue;
+						fte->showDebugPanel = textEditDebugInfo;
+					}
+				}
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
