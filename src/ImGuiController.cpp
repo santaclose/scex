@@ -28,7 +28,7 @@ namespace ste::ImGuiController
 	void OnFileShowInFolder(const std::string& filePath);
 	void OnFolderShow(const std::string& folderPath);
 	void OnFindInFolder(const std::string& folderPath);
-	void OnFolderSearchResultClick(const DirectoryFinderSearchResult& searchResult);
+	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult);
 
 	bool menuBarEnabled = true;
 	bool textEditDebugInfo = false;
@@ -84,14 +84,14 @@ namespace ste::ImGuiController
 	}
 
 	// ---- Callback from folder finder ---- //
-	void OnFolderSearchResultClick(const DirectoryFinderSearchResult& searchResult)
+	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult)
 	{
 		FileTextEdit* targetEditor;
-		if (fileToEditorMap.find(searchResult.filePath) == fileToEditorMap.end() || fileToEditorMap[searchResult.filePath] == nullptr)
-			targetEditor = fileToEditorMap[searchResult.filePath] = CreateNewEditor(searchResult.filePath.c_str());
+		if (fileToEditorMap.find(filePath) == fileToEditorMap.end() || fileToEditorMap[filePath] == nullptr)
+			targetEditor = fileToEditorMap[filePath] = CreateNewEditor(filePath.c_str());
 		else
-			targetEditor = editorToFocus = fileToEditorMap[searchResult.filePath];
-		targetEditor->SetSelection(searchResult.line - 1, searchResult.startCharIndex, searchResult.line - 1, searchResult.endCharIndex);
+			targetEditor = editorToFocus = fileToEditorMap[filePath];
+		targetEditor->SetSelection(searchResult.lineNumber - 1, searchResult.startCharIndex, searchResult.lineNumber - 1, searchResult.endCharIndex);
 	}
 }
 

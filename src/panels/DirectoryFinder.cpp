@@ -34,11 +34,17 @@ bool DirectoryFinder::OnImGui()
 				finderThread = nullptr;
 		}
 
-		ImGui::Separator();
-		for (int i = 0; i < results.size(); i++)
+		for (int i = 0; i < resultFiles.size(); i++)
 		{
-			if (ImGui::Selectable((results[i].filePath + ": " + std::to_string(results[i].line)).c_str()) && onResultClickCallback != nullptr)
-				onResultClickCallback(results[i]);
+			DirectoryFinderSearchResultFile& file = resultFiles[i];
+			ImGui::Separator();
+			ImGui::TextUnformatted(file.fileName.c_str());
+			for (int j = 0; j < file.results.size(); j++)
+			{
+				DirectoryFinderSearchResult& res = file.results[j];
+				if (ImGui::Selectable(res.displayText.c_str()) && onResultClickCallback != nullptr)
+					onResultClickCallback(file.filePath, res);
+			}
 		}
 	}
 	ImGui::End();
@@ -47,20 +53,25 @@ bool DirectoryFinder::OnImGui()
 
 void DirectoryFinder::Find()
 {
-	results.clear();
+	resultFiles.clear();
 
 	std::string toFindAsStdString = std::string(toFind);
 	std::regex toIncludeAsPattern = std::regex(toInclude);
 	std::regex toExcludeAsPattern = std::regex(toExclude);
 	std::regex toFindAsPattern = caseSensitiveEnabled ? std::regex(toFind) : std::regex(toFind, std::regex_constants::icase);
 
+	bool foundInFile = false;
 	for (std::filesystem::recursive_directory_iterator i(directoryPath), end; i != end; ++i)
 	{
 		if (finderThread == nullptr)
 			break;
 		if (is_directory(i->path()))
 			continue;
+
+		foundInFile = false;
+
 		std::string filePath = i->path().string();
+		std::string fileName = i->path().filename().string();
 		std::smatch filePathMatch;
 		if (toInclude[0] != '\0' && !std::regex_match(filePath, filePathMatch, toIncludeAsPattern))
 			continue;
@@ -82,7 +93,14 @@ void DirectoryFinder::Find()
 				{
 					int startChar = line.find(toFind, 0);
 					if (startChar != std::string::npos)
-						results.push_back({ filePath, curLine, startChar, startChar + (int)toFindAsStdString.length() });
+					{
+						if (!foundInFile)
+						{
+							resultFiles.push_back({ filePath, fileName, {} });
+							foundInFile = true;
+						}
+						resultFiles.back().results.push_back({ std::to_string(curLine) + ": " + line, curLine, startChar, startChar + (int)toFindAsStdString.length()});
+					}
 				}
 				else // caseSensitiveEnabled
 				{
@@ -94,7 +112,12 @@ void DirectoryFinder::Find()
 					if (it != line.end())
 					{
 						int startChar = it - line.begin();
-						results.push_back({ filePath, curLine, startChar, startChar + (int)toFindAsStdString.length() });
+						if (!foundInFile)
+						{
+							resultFiles.push_back({ filePath, fileName, {} });
+							foundInFile = true;
+						}
+						resultFiles.back().results.push_back({ std::to_string(curLine) + ": " + line, curLine, startChar, startChar + (int)toFindAsStdString.length() });
 					}
 				}
 			}
@@ -102,7 +125,14 @@ void DirectoryFinder::Find()
 			{
 				std::smatch lineMatch;
 				if (std::regex_search(line, lineMatch, toFindAsPattern))
-					results.push_back({ filePath, curLine, (int)lineMatch.position(), (int)(lineMatch.position() + lineMatch.length()) });
+				{
+					if (!foundInFile)
+					{
+						resultFiles.push_back({ filePath, fileName, {} });
+						foundInFile = true;
+					}
+					resultFiles.back().results.push_back({ std::to_string(curLine) + ": " + line, curLine, (int)lineMatch.position(), (int)(lineMatch.position() + lineMatch.length()) });
+				}
 			}
 		}
 		fileInput.close();

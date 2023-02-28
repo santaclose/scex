@@ -9,15 +9,22 @@
 
 struct DirectoryFinderSearchResult
 {
-	std::string filePath;
-	int line;
+	std::string displayText;
+	int lineNumber;
 	int startCharIndex;
 	int endCharIndex;
 };
 
+struct DirectoryFinderSearchResultFile
+{
+	std::string filePath;
+	std::string fileName;
+	std::vector<DirectoryFinderSearchResult> results;
+};
+
 struct DirectoryFinder
 {
-	typedef void (*OnResultClickCallback)(const DirectoryFinderSearchResult& result);
+	typedef void (*OnResultClickCallback)(const std::string& filePath, const DirectoryFinderSearchResult& result);
 
 	std::string panelName = "Folder search";
 	std::string directoryPath;
@@ -27,7 +34,7 @@ struct DirectoryFinder
 	char toInclude[INPUT_BUFFER_SIZE];
 	char toExclude[INPUT_BUFFER_SIZE];
 
-	std::vector<DirectoryFinderSearchResult> results;
+	std::vector<DirectoryFinderSearchResultFile> resultFiles;
 
 	DirectoryFinder(const std::string& folderPath, OnResultClickCallback onResultClickCallback = nullptr);
 	bool OnImGui();
