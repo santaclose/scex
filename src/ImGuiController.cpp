@@ -24,11 +24,12 @@
 namespace ste::ImGuiController
 {
 	// ---- Callback declarations ---- //
-	void OnFileClickedInFolderView(const std::string& filePath);
-	void OnFileShowInFolder(const std::string& filePath);
-	void OnFolderShow(const std::string& folderPath);
-	void OnFindInFolder(const std::string& folderPath);
-	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult);
+	void OnFolderShow(const std::string& folderPath, int folderViewId);
+	void OnFindInFolder(const std::string& folderPath, int folderViewId);
+	void OnFileShowInFolder(const std::string& filePath, int folderViewId);
+	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId);
+	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult, int folderViewId);
+	void OnFileTextEditFindFileKeyCombo(int folderViewId);
 
 	bool menuBarEnabled = true;
 	bool textEditDebugInfo = false;
@@ -43,56 +44,67 @@ namespace ste::ImGuiController
 	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFileContextMenuOptions = { {"Show in folder", OnFileShowInFolder} };
 	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFolderContextMenuOptions = { {"Show", OnFolderShow}, {"Find in folder", OnFindInFolder} };
 
-	FileTextEdit* CreateNewEditor(const char* filePath = nullptr)
+	FileTextEdit* CreateNewEditor(const char* filePath = nullptr, int fromFolderView = -1)
 	{
-		fileTextEdits.push_back(new FileTextEdit(filePath));
-		fileTextEdits.back()->showDebugPanel = textEditDebugInfo;
+		int fileTextEditId = fileTextEdits.size();
+		fileTextEdits.push_back(new FileTextEdit(filePath, fileTextEditId, fromFolderView, OnFileTextEditFindFileKeyCombo));
+		fileTextEdits.back()->SetShowDebugPanel(textEditDebugInfo);
 		return fileTextEdits.back();
 	}
 
 	void CreateNewFolderViewer(const std::string& folderPath)
 	{
-		folderViewers.push_back(new DirectoryTreeView(folderPath, OnFileClickedInFolderView, &folderViewFileContextMenuOptions, &folderViewFolderContextMenuOptions));
+		int folderViewerId = folderViewers.size();
+		folderViewers.push_back(new DirectoryTreeView(folderPath, OnFileClickedInFolderView, &folderViewFileContextMenuOptions, &folderViewFolderContextMenuOptions, folderViewerId));
 	}
-	void CreateNewFolderSearch(const std::string& folderPath)
+	void CreateNewFolderSearch(const std::string& folderPath, int fromFolderView)
 	{
+		int folderSearchId = folderFinders.size();
 		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick));
 	}
 
 	// ---- Callbacks from folder view ---- //
-	void OnFileClickedInFolderView(const std::string& filePath)
+	void OnFolderShow(const std::string& folderPath, int folderViewId)
 	{
-		if (fileToEditorMap.find(filePath) == fileToEditorMap.end() || fileToEditorMap[filePath] == nullptr)
-			fileToEditorMap[filePath] = CreateNewEditor(filePath.c_str());
-		else
-			editorToFocus = fileToEditorMap[filePath];
+		std::string command = "explorer \"" + folderPath + "\"";
+		system(command.c_str());
 	}
-	void OnFileShowInFolder(const std::string& filePath)
+	void OnFindInFolder(const std::string& folderPath, int folderViewId)
+	{
+		CreateNewFolderSearch(folderPath, folderViewId);
+	}
+	void OnFileShowInFolder(const std::string& filePath, int folderViewId)
 	{
 		auto path = std::filesystem::path(filePath);
 		std::string parentFolderPath = path.parent_path().string();
 		std::string command = "explorer /select,\"" + path.string() + "\",\"" + parentFolderPath + "\"";
 		system(command.c_str());
 	}
-	void OnFolderShow(const std::string& folderPath)
+	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId)
 	{
-		std::string command = "explorer \"" + folderPath + "\"";
-		system(command.c_str());
-	}
-	void OnFindInFolder(const std::string& folderPath)
-	{
-		CreateNewFolderSearch(folderPath);
+		if (fileToEditorMap.find(filePath) == fileToEditorMap.end() || fileToEditorMap[filePath] == nullptr)
+			fileToEditorMap[filePath] = CreateNewEditor(filePath.c_str(), folderViewId);
+		else
+			editorToFocus = fileToEditorMap[filePath];
 	}
 
 	// ---- Callback from folder finder ---- //
-	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult)
+	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult, int folderViewId)
 	{
 		FileTextEdit* targetEditor;
 		if (fileToEditorMap.find(filePath) == fileToEditorMap.end() || fileToEditorMap[filePath] == nullptr)
-			targetEditor = fileToEditorMap[filePath] = CreateNewEditor(filePath.c_str());
+			targetEditor = fileToEditorMap[filePath] = CreateNewEditor(filePath.c_str(), folderViewId);
 		else
 			targetEditor = editorToFocus = fileToEditorMap[filePath];
 		targetEditor->SetSelection(searchResult.lineNumber - 1, searchResult.startCharIndex, searchResult.lineNumber - 1, searchResult.endCharIndex);
+	}
+
+	// ---- Callback from file text editor ---- //
+	void OnFileTextEditFindFileKeyCombo(int folderViewId)
+	{
+		if (folderViewId < 0 || folderViewers[folderViewId] == nullptr)
+			return;
+		folderViewers[folderViewId]->RunSearch();
 	}
 }
 
@@ -182,7 +194,7 @@ void ste::ImGuiController::Tick()
 					{
 						if (fte == nullptr)
 							continue;
-						fte->showDebugPanel = textEditDebugInfo;
+						fte->SetShowDebugPanel(textEditDebugInfo);
 					}
 				}
 				ImGui::EndMenu();
@@ -243,8 +255,9 @@ void ste::ImGuiController::Tick()
 		}
 		if (fileTextEditToDelete > -1)
 		{
-			if (fileTextEdits[fileTextEditToDelete]->hasAssociatedFile)
-				fileToEditorMap.erase(fileTextEdits[fileTextEditToDelete]->associatedFile);
+			const char* associatedFile = fileTextEdits[fileTextEditToDelete]->GetAssociatedFile();
+			if (associatedFile != nullptr)
+				fileToEditorMap.erase(associatedFile);
 			delete fileTextEdits[fileTextEditToDelete];
 			fileTextEdits[fileTextEditToDelete] = nullptr;
 		}

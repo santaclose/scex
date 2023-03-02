@@ -1,20 +1,66 @@
 #include "DirectoryTreeView.h"
 
-DirectoryTreeView::DirectoryTreeView(const std::string& folderPath, OnFileClickCallback fileClickCallback, std::vector<std::pair<std::string, OnContextMenuCallback>>* fileContextMenuOptions, std::vector<std::pair<std::string, OnContextMenuCallback>>* folderContextMenuOptions)
+DirectoryTreeView::DirectoryTreeView(
+	const std::string& folderPath,
+	OnFileClickCallback fileClickCallback,
+	std::vector<std::pair<std::string, OnContextMenuCallback>>* fileContextMenuOptions,
+	std::vector<std::pair<std::string, OnContextMenuCallback>>* folderContextMenuOptions,
+	int id)
 {
+	this->id = id;
 	panelName = "Folder view##" + std::to_string((int)this);
 	directoryPath = folderPath;
 	this->fileClickCallback = fileClickCallback;
 	this->fileContextMenuOptions = fileContextMenuOptions;
 	this->folderContextMenuOptions = folderContextMenuOptions;
+	findFilesBuffer[0] = '\0';
 	directoryTreeRoot = CreateDirectoryNodeTreeFromPath(folderPath);
 }
 
 bool DirectoryTreeView::OnImGui()
 {
 	bool windowIsOpen = true;
+	if (requestingFocus)
+		ImGui::SetNextWindowFocus();
 	if (ImGui::Begin(panelName.c_str(), &windowIsOpen, ImGuiWindowFlags_NoSavedSettings))
 	{
+		if (ImGui::IsWindowFocused() && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
+			RunSearch();
+
+		if (searching)
+		{
+			if (ImGui::IsKeyDown(ImGuiKey_Escape))
+				searching = false;
+
+			if (requestingFocus)
+			{
+				ImGui::SetKeyboardFocusHere();
+				requestingFocus = false;
+			}
+			if (ImGui::InputText("Find files", findFilesBuffer, FIND_FILES_BUFFER_SIZE))
+			{
+				searchResults.clear();
+				Trie::GetSuggestions(&searchTrie, std::string(findFilesBuffer), searchResults);
+			}
+			for (const std::string& searchResult : searchResults)
+			{
+				for (const std::string& filePath : fileNameToPath[searchResult])
+				{
+					if (fileClickCallback != nullptr)
+					{
+						if (ImGui::Selectable(searchResult.c_str()))
+							fileClickCallback(filePath, id);
+						if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))
+						{
+							fileClickCallback(filePath, id);
+							ImGui::GetIO().ClearInputKeys();
+						}
+					}
+				}
+			}
+			ImGui::Separator();
+		}
+
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
 		isHoveringNodeThisFrame = false;
 		RecursivelyDisplayDirectoryNode(directoryTreeRoot);
@@ -47,6 +93,13 @@ bool DirectoryTreeView::OnImGui()
 	return windowIsOpen;
 }
 
+void DirectoryTreeView::RunSearch()
+{
+	requestingFocus = searching = true;
+	findFilesBuffer[0] = '\0';
+	searchResults.clear();
+}
+
 void DirectoryTreeView::RecursivelyAddDirectoryNodes(DirectoryTreeViewNode& parentNode, std::filesystem::directory_iterator directoryIterator)
 {
 	for (const std::filesystem::directory_entry& entry : directoryIterator)
@@ -56,6 +109,13 @@ void DirectoryTreeView::RecursivelyAddDirectoryNodes(DirectoryTreeViewNode& pare
 		childNode.fileName = entry.path().filename().u8string();
 		if (childNode.isDirectory = entry.is_directory(); childNode.isDirectory)
 			RecursivelyAddDirectoryNodes(childNode, std::filesystem::directory_iterator(entry));
+		else
+		{
+			std::string fileName = entry.path().filename().string();
+			std::string filePath = entry.path().string();
+			Trie::Insert(&searchTrie, fileName);
+			fileNameToPath[fileName].push_back(filePath);
+		}
 	}
 
 	auto moveDirectoriesToFront = [](const DirectoryTreeViewNode& a, const DirectoryTreeViewNode& b) { return (a.isDirectory > b.isDirectory); };
@@ -105,7 +165,7 @@ void DirectoryTreeView::RecursivelyDisplayDirectoryNode(const DirectoryTreeViewN
 			if (ImGui::IsItemClicked(0))
 			{
 				if (fileClickCallback != nullptr)
-					fileClickCallback(parentNode.fullPath);
+					fileClickCallback(parentNode.fullPath, id);
 			}
 		}
 		if (ImGui::IsItemHovered())

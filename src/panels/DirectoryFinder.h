@@ -24,7 +24,14 @@ struct DirectoryFinderSearchResultFile
 
 struct DirectoryFinder
 {
-	typedef void (*OnResultClickCallback)(const std::string& filePath, const DirectoryFinderSearchResult& result);
+	typedef void (*OnResultClickCallback)(const std::string& filePath, const DirectoryFinderSearchResult& result, int originFolderView);
+
+	DirectoryFinder(const std::string& folderPath, OnResultClickCallback onResultClickCallback = nullptr, int id = -1, int createdFromFolderView = -1);
+	bool OnImGui();
+
+private:
+	int id = -1;
+	int createdFromFolderView = -1;
 
 	std::string panelName = "Folder search";
 	std::string directoryPath;
@@ -36,11 +43,6 @@ struct DirectoryFinder
 
 	std::vector<DirectoryFinderSearchResultFile> resultFiles;
 
-	DirectoryFinder(const std::string& folderPath, OnResultClickCallback onResultClickCallback = nullptr);
-	bool OnImGui();
-
-
-private:
 	OnResultClickCallback onResultClickCallback = nullptr;
 	std::thread* finderThread = nullptr;
 

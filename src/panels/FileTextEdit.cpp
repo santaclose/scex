@@ -15,11 +15,15 @@ std::unordered_map<std::string, const TextEditor::LanguageDefinition*> FileTextE
 	   {".h", &TextEditor::LanguageDefinition::C()},
 	   {".sql", &TextEditor::LanguageDefinition::SQL()},
 	   {".as", &TextEditor::LanguageDefinition::AngelScript()},
-	   {".lua",&TextEditor::LanguageDefinition::Lua()}
+	   {".lua",&TextEditor::LanguageDefinition::Lua()},
+	   {".cs",&TextEditor::LanguageDefinition::CSharp()}
 };
 
-FileTextEdit::FileTextEdit(const char* filePath)
+FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFindFileKeyComboCallback onFindFileKeyComboCallback)
 {
+	this->id = id;
+	this->createdFromFolderView = createdFromFolderView;
+	this->onFindFileKeyComboCallback = onFindFileKeyComboCallback;
 	editor = new TextEditor();
 	if (filePath == nullptr)
 		panelName = "untitled##" + std::to_string((int)this);
@@ -159,7 +163,10 @@ bool FileTextEdit::OnImGui()
 		ImGui::EndMenuBar();
 	}
 
-	editor->Render("TextEditor", isFocused);
+	isFocused |= editor->Render("TextEditor", isFocused);
+	if (onFindFileKeyComboCallback != nullptr && isFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
+		onFindFileKeyComboCallback(createdFromFolderView);
+
 	ImGui::End();
 
 	return windowIsOpen;
@@ -169,4 +176,16 @@ void FileTextEdit::SetSelection(int startLine, int startChar, int endLine, int e
 {
 	editor->SetCursorPosition(endLine, endChar);
 	editor->SetSelection(startLine, startChar, endLine, endChar);
+}
+
+const char* FileTextEdit::GetAssociatedFile()
+{
+	if (!hasAssociatedFile)
+		return nullptr;
+	return associatedFile.c_str();
+}
+
+void FileTextEdit::SetShowDebugPanel(bool value)
+{
+	showDebugPanel = value;
 }

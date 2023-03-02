@@ -4,8 +4,10 @@
 #include <fstream>
 #include <regex>
 
-DirectoryFinder::DirectoryFinder(const std::string& folderPath, OnResultClickCallback onResultClickCallback)
+DirectoryFinder::DirectoryFinder(const std::string& folderPath, OnResultClickCallback onResultClickCallback, int id, int createdFromFolderView)
 {
+	this->id = id;
+	this->createdFromFolderView = createdFromFolderView;
 	this->onResultClickCallback = onResultClickCallback;
 	panelName = "Folder search##" + std::to_string((int)this);
 	directoryPath = folderPath;
@@ -43,7 +45,7 @@ bool DirectoryFinder::OnImGui()
 			{
 				DirectoryFinderSearchResult& res = file.results[j];
 				if (ImGui::Selectable(res.displayText.c_str()) && onResultClickCallback != nullptr)
-					onResultClickCallback(file.filePath, res);
+					onResultClickCallback(file.filePath, res, createdFromFolderView);
 			}
 		}
 	}
