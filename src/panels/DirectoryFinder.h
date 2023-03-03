@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <mutex>
 
 #define INPUT_BUFFER_SIZE 256
 
@@ -45,6 +46,7 @@ private:
 
 	OnResultClickCallback onResultClickCallback = nullptr;
 	std::thread* finderThread = nullptr;
+	std::mutex finderThreadMutex;
 
 	void Find();
 };

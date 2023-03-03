@@ -36,16 +36,19 @@ bool DirectoryFinder::OnImGui()
 				finderThread = nullptr;
 		}
 
-		for (int i = 0; i < resultFiles.size(); i++)
 		{
-			DirectoryFinderSearchResultFile& file = resultFiles[i];
-			ImGui::Separator();
-			ImGui::TextUnformatted(file.fileName.c_str());
-			for (int j = 0; j < file.results.size(); j++)
+			std::lock_guard<std::mutex> guard(finderThreadMutex);
+			for (int i = 0; i < resultFiles.size(); i++)
 			{
-				DirectoryFinderSearchResult& res = file.results[j];
-				if (ImGui::Selectable(res.displayText.c_str()) && onResultClickCallback != nullptr)
-					onResultClickCallback(file.filePath, res, createdFromFolderView);
+				DirectoryFinderSearchResultFile& file = resultFiles[i];
+				ImGui::Separator();
+				ImGui::TextUnformatted(file.fileName.c_str());
+				for (int j = 0; j < file.results.size(); j++)
+				{
+					DirectoryFinderSearchResult& res = file.results[j];
+					if (ImGui::Selectable(res.displayText.c_str()) && onResultClickCallback != nullptr)
+						onResultClickCallback(file.filePath, res, createdFromFolderView);
+				}
 			}
 		}
 	}
@@ -55,7 +58,10 @@ bool DirectoryFinder::OnImGui()
 
 void DirectoryFinder::Find()
 {
-	resultFiles.clear();
+	{
+		std::lock_guard<std::mutex> guard(finderThreadMutex);
+		resultFiles.clear();
+	}
 
 	std::string toFindAsStdString = std::string(toFind);
 	std::regex toIncludeAsPattern = std::regex(toInclude);
@@ -96,6 +102,7 @@ void DirectoryFinder::Find()
 					int startChar = line.find(toFind, 0);
 					if (startChar != std::string::npos)
 					{
+						std::lock_guard<std::mutex> guard(finderThreadMutex);
 						if (!foundInFile)
 						{
 							resultFiles.push_back({ filePath, fileName, {} });
@@ -113,6 +120,7 @@ void DirectoryFinder::Find()
 					);
 					if (it != line.end())
 					{
+						std::lock_guard<std::mutex> guard(finderThreadMutex);
 						int startChar = it - line.begin();
 						if (!foundInFile)
 						{
@@ -128,6 +136,7 @@ void DirectoryFinder::Find()
 				std::smatch lineMatch;
 				if (std::regex_search(line, lineMatch, toFindAsPattern))
 				{
+					std::lock_guard<std::mutex> guard(finderThreadMutex);
 					if (!foundInFile)
 					{
 						resultFiles.push_back({ filePath, fileName, {} });
