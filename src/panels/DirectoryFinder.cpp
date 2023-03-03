@@ -53,6 +53,13 @@ bool DirectoryFinder::OnImGui()
 		}
 	}
 	ImGui::End();
+	// if user wants to close the window, thread has to be joined so mutex can't be locked
+	if (!windowIsOpen && finderThread != nullptr)
+	{
+		std::thread* threadToJoin = finderThread;
+		finderThread = nullptr;
+		threadToJoin->join();
+	}
 	return windowIsOpen;
 }
 
