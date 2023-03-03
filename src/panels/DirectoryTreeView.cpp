@@ -44,16 +44,17 @@ bool DirectoryTreeView::OnImGui()
 			}
 			for (const std::string& searchResult : searchResults)
 			{
+				bool fileNameIsUnique = fileNameToPath[searchResult].size() == 1;
 				for (const std::string& filePath : fileNameToPath[searchResult])
 				{
 					if (fileClickCallback != nullptr)
 					{
-						if (ImGui::Selectable(searchResult.c_str()))
-							fileClickCallback(filePath, id);
-						if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))
+						if ((fileNameIsUnique ? ImGui::Selectable(searchResult.c_str()) : ImGui::Selectable((searchResult + " (" + filePath + ")").c_str())) ||
+							ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))
 						{
 							fileClickCallback(filePath, id);
 							ImGui::GetIO().ClearInputKeys();
+							searching = false;
 						}
 					}
 				}
