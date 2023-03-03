@@ -43,24 +43,33 @@ bool DirectoryTreeView::OnImGui()
 				ImGui::SetKeyboardFocusHere();
 				requestingFocus = false;
 			}
-			if (ImGui::InputText("Find files", findFilesBuffer, FIND_FILES_BUFFER_SIZE))
+			if (ImGui::InputText("Find files", findFilesBuffer, FIND_FILES_BUFFER_SIZE)) // true when text changes
 			{
 				searchResults.clear();
 				Trie::GetSuggestions(&searchTrie, std::string(findFilesBuffer), searchResults);
 			}
+			bool searchTextFieldHasFocus = ImGui::IsItemFocused();
+			bool pressedEnterOnSearchbarAndThereAreSearchResults = searchTextFieldHasFocus && searchResults.size() > 0 && ImGui::IsKeyDown(ImGuiKey_Enter); // to be able to press enter right after typing without using arrow keys
+
+			bool callbackCalled = false;
 			for (const std::string& searchResult : searchResults)
 			{
+				if (callbackCalled)
+					break;
 				bool fileNameIsUnique = fileNameToPath[searchResult].size() == 1;
 				for (const std::string& filePath : fileNameToPath[searchResult])
 				{
 					if (fileClickCallback != nullptr)
 					{
 						if ((fileNameIsUnique ? ImGui::Selectable(searchResult.c_str()) : ImGui::Selectable((searchResult + " (" + filePath + ")").c_str())) ||
+							pressedEnterOnSearchbarAndThereAreSearchResults ||
 							ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))
 						{
 							fileClickCallback(filePath, id);
 							ImGui::GetIO().ClearInputKeys();
 							searching = false;
+							callbackCalled = true;
+							break;
 						}
 					}
 				}
