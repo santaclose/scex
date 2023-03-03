@@ -14,6 +14,12 @@ struct FileTextEdit
 	void SetShowDebugPanel(bool value);
 
 private:
+
+	// Commands
+	void OnReloadCommand();
+	void OnLoadFromCommand();
+	void OnSaveCommand();
+
 	int id = -1;
 	int createdFromFolderView = -1;
 
@@ -25,6 +31,7 @@ private:
 	std::string panelName;
 	std::string associatedFile;
 	int tabSize = 4;
+	int undoIndexInDisk = 0;
 
 	static std::unordered_map<std::string, const TextEditor::LanguageDefinition*> extensionToLanguageDefinition;
 };

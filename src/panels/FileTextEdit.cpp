@@ -58,7 +58,7 @@ bool FileTextEdit::OnImGui()
 	ImGui::Begin(panelName.c_str(), &windowIsOpen,
 		ImGuiWindowFlags_MenuBar |
 		ImGuiWindowFlags_NoSavedSettings |
-		(editor->CanUndo() ? ImGuiWindowFlags_UnsavedDocument : 0x0));
+		(editor->GetUndoIndex() != undoIndexInDisk ? ImGuiWindowFlags_UnsavedDocument : 0x0));
 	ImGui::PopStyleVar();
 
 	bool isFocused = ImGui::IsWindowFocused();
@@ -67,46 +67,11 @@ bool FileTextEdit::OnImGui()
 		if (ImGui::BeginMenu("File"))
 		{
 			if (hasAssociatedFile && ImGui::MenuItem("Reload", "Ctrl+R"))
-			{
-				std::ifstream t(associatedFile);
-				std::string str((std::istreambuf_iterator<char>(t)),
-					std::istreambuf_iterator<char>());
-				editor->SetText(str);
-			}
+				OnReloadCommand();
 			if (ImGui::MenuItem("Load from"))
-			{
-				std::vector<std::string> selection = pfd::open_file("Open file", "", { "Any file", "*" }).result();
-				if (selection.size() == 0)
-					std::cout << "File not loaded\n";
-				else
-				{
-					std::ifstream t(selection[0]);
-					std::string str((std::istreambuf_iterator<char>(t)),
-						std::istreambuf_iterator<char>());
-					editor->SetText(str);
-					auto pathObject = std::filesystem::path(selection[0]);
-					auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
-					if (lang != extensionToLanguageDefinition.end())
-						editor->SetLanguageDefinition(*extensionToLanguageDefinition[pathObject.extension().string()]);
-				}
-			}
+				OnLoadFromCommand();
 			if (ImGui::MenuItem("Save", "Ctrl+S"))
-			{
-				std::string textToSave = editor->GetText();
-				std::string destination = hasAssociatedFile ?
-					associatedFile :
-					pfd::save_file("Save file", "", { "Any file", "*" }).result();
-				if (destination.length() > 0)
-				{
-					associatedFile = destination;
-					hasAssociatedFile = true;
-					panelName = std::filesystem::path(destination).filename().string() + "##" + std::to_string((int)this);
-					std::ofstream outFile;
-					outFile.open(destination);
-					outFile << textToSave;
-					outFile.close();
-				}
-			}
+				OnSaveCommand();
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit"))
@@ -164,8 +129,16 @@ bool FileTextEdit::OnImGui()
 	}
 
 	isFocused |= editor->Render("TextEditor", isFocused);
-	if (onFindFileKeyComboCallback != nullptr && isFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
-		onFindFileKeyComboCallback(createdFromFolderView);
+	if (isFocused)
+	{
+		bool ctrlPressed = ImGui::GetIO().KeyCtrl;
+		if (ctrlPressed && ImGui::IsKeyDown(ImGuiKey_S))
+			OnSaveCommand();
+		if (ctrlPressed && ImGui::IsKeyDown(ImGuiKey_R))
+			OnReloadCommand();
+		if (onFindFileKeyComboCallback != nullptr && ctrlPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
+			onFindFileKeyComboCallback(createdFromFolderView);
+	}
 
 	ImGui::End();
 
@@ -188,4 +161,53 @@ const char* FileTextEdit::GetAssociatedFile()
 void FileTextEdit::SetShowDebugPanel(bool value)
 {
 	showDebugPanel = value;
+}
+
+// Commands
+
+void FileTextEdit::OnReloadCommand()
+{
+	std::ifstream t(associatedFile);
+	std::string str((std::istreambuf_iterator<char>(t)),
+		std::istreambuf_iterator<char>());
+	editor->SetText(str);
+	undoIndexInDisk = 0;
+}
+
+void FileTextEdit::OnLoadFromCommand()
+{
+	std::vector<std::string> selection = pfd::open_file("Open file", "", { "Any file", "*" }).result();
+	if (selection.size() == 0)
+		std::cout << "File not loaded\n";
+	else
+	{
+		std::ifstream t(selection[0]);
+		std::string str((std::istreambuf_iterator<char>(t)),
+			std::istreambuf_iterator<char>());
+		editor->SetText(str);
+		auto pathObject = std::filesystem::path(selection[0]);
+		auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
+		if (lang != extensionToLanguageDefinition.end())
+			editor->SetLanguageDefinition(*extensionToLanguageDefinition[pathObject.extension().string()]);
+	}
+	undoIndexInDisk = -1; // assume they are loading text from some other file
+}
+
+void FileTextEdit::OnSaveCommand()
+{
+	std::string textToSave = editor->GetText();
+	std::string destination = hasAssociatedFile ?
+		associatedFile :
+		pfd::save_file("Save file", "", { "Any file", "*" }).result();
+	if (destination.length() > 0)
+	{
+		associatedFile = destination;
+		hasAssociatedFile = true;
+		panelName = std::filesystem::path(destination).filename().string() + "##" + std::to_string((int)this);
+		std::ofstream outFile;
+		outFile.open(destination);
+		outFile << textToSave;
+		outFile.close();
+	}
+	undoIndexInDisk = editor->GetUndoIndex();
 }
