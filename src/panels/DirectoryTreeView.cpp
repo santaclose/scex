@@ -17,6 +17,12 @@ DirectoryTreeView::DirectoryTreeView(
 	directoryTreeRoot = CreateDirectoryNodeTreeFromPath(folderPath);
 }
 
+DirectoryTreeView::~DirectoryTreeView()
+{
+	for (auto& item : searchTrie.children)
+		Trie::Free(item.second);
+}
+
 bool DirectoryTreeView::OnImGui()
 {
 	bool windowIsOpen = true;

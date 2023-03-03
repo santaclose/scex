@@ -28,6 +28,7 @@ struct DirectoryTreeView
 		std::vector<std::pair<std::string, OnContextMenuCallback>>* fileContextMenuOptions = nullptr,
 		std::vector<std::pair<std::string, OnContextMenuCallback>>* folderContextMenuOptions = nullptr,
 		int id = -1);
+	~DirectoryTreeView();
 	bool OnImGui();
 	void RunSearch();
 

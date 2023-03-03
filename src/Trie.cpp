@@ -66,3 +66,10 @@ int Trie::GetSuggestions(Node* root, const std::string& query, std::vector<std::
 	SuggestionsRec(pCrawl, query, suggestionsOut);
 	return 1;
 }
+
+void Trie::Free(Node* root)
+{
+	for (auto& item : root->children)
+		Free(item.second);
+	delete root;
+}
