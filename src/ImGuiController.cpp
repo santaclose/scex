@@ -60,7 +60,7 @@ namespace ste::ImGuiController
 	void CreateNewFolderSearch(const std::string& folderPath, int fromFolderView)
 	{
 		int folderSearchId = folderFinders.size();
-		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick));
+		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick, folderSearchId, fromFolderView));
 	}
 
 	// ---- Callbacks from folder view ---- //
