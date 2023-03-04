@@ -8,6 +8,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <json.hpp>
 #include <portable-file-dialogs.h>
@@ -16,13 +17,11 @@
 #include <panels/DirectoryFinder.h>
 #include <panels/FileTextEdit.h>
 
-#define DEFAULT_TEXT_EDITOR_WIDTH 800
-#define DEFAULT_TEXT_EDITOR_HEIGHT 600
-#define DEFAULT_FOLDER_VIEW_WIDTH 250
-#define DEFAULT_FOLDER_VIEW_HEIGHT 600
-
 namespace ste::ImGuiController
 {
+	ImGuiID leftDockID = -1;
+	ImGuiID rightDockID = -1;
+
 	// ---- Callback declarations ---- //
 	void OnFolderShow(const std::string& folderPath, int folderViewId);
 	void OnFindInFolder(const std::string& folderPath, int folderViewId);
@@ -61,6 +60,13 @@ namespace ste::ImGuiController
 	{
 		int folderSearchId = folderFinders.size();
 		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick, folderSearchId, fromFolderView));
+	}
+
+	void InitializeLayout(ImGuiID dock_main_id)
+	{
+		leftDockID = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.23f, NULL, &dock_main_id);
+		rightDockID = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.3f, NULL, &dock_main_id);
+		ImGui::DockBuilderFinish(dock_main_id);
 	}
 
 	// ---- Callbacks from folder view ---- //
@@ -157,7 +163,10 @@ void ste::ImGuiController::Tick()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-	ImGui::DockSpaceOverViewport();
+
+	ImGuiID mainDockID = ImGui::DockSpaceOverViewport();
+	if (leftDockID == -1)
+		InitializeLayout(mainDockID);
 
 	if (menuBarEnabled)
 	{
@@ -210,7 +219,7 @@ void ste::ImGuiController::Tick()
 			DirectoryTreeView* folderView = folderViewers[i];
 			if (folderView == nullptr)
 				continue;
-			ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowDockID(leftDockID, ImGuiCond_FirstUseEver);
 			if (!folderView->OnImGui())
 				folderViewToDelete = i;
 		}
@@ -227,7 +236,7 @@ void ste::ImGuiController::Tick()
 			DirectoryFinder* finder = folderFinders[i];
 			if (finder == nullptr)
 				continue;
-			ImGui::SetNextWindowSize(ImVec2(DEFAULT_FOLDER_VIEW_WIDTH, DEFAULT_FOLDER_VIEW_HEIGHT), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowDockID(rightDockID, ImGuiCond_FirstUseEver);
 			if (!finder->OnImGui())
 				finderToDelete = i;
 		}
@@ -244,7 +253,7 @@ void ste::ImGuiController::Tick()
 			FileTextEdit* fte = fileTextEdits[i];
 			if (fte == nullptr)
 				continue;
-			ImGui::SetNextWindowSize(ImVec2(DEFAULT_TEXT_EDITOR_WIDTH, DEFAULT_TEXT_EDITOR_HEIGHT), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowDockID(mainDockID, ImGuiCond_FirstUseEver);
 			if (editorToFocus == fte)
 			{
 				ImGui::SetNextWindowFocus();
