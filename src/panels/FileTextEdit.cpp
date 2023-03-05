@@ -16,7 +16,8 @@ std::unordered_map<std::string, const TextEditor::LanguageDefinition*> FileTextE
 	   {".sql", &TextEditor::LanguageDefinition::SQL()},
 	   {".as", &TextEditor::LanguageDefinition::AngelScript()},
 	   {".lua",&TextEditor::LanguageDefinition::Lua()},
-	   {".cs",&TextEditor::LanguageDefinition::CSharp()}
+	   {".cs",&TextEditor::LanguageDefinition::CSharp()},
+	   {".json",&TextEditor::LanguageDefinition::Json()}
 };
 
 FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFindFileKeyComboCallback onFindFileKeyComboCallback)
