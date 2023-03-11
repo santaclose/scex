@@ -158,9 +158,6 @@ bool ste::ImGuiController::HasControl()
 
 void ste::ImGuiController::Tick()
 {
-	if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F1)))
-		menuBarEnabled = !menuBarEnabled;
-
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
@@ -169,30 +166,26 @@ void ste::ImGuiController::Tick()
 	if (leftDockID == -1)
 		InitializeLayout(mainDockID);
 
+	bool newTextPanelRequested = false;
+	bool openFileRequested = false;
+	bool openFolderRequested = false;
+
+	bool ctrlKeyDown = ImGui::GetIO().KeyCtrl;
+	if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F1)))
+		menuBarEnabled = !menuBarEnabled;
+
+	newTextPanelRequested |= ctrlKeyDown && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N));
+	openFileRequested |= ctrlKeyDown && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O));
+
 	if (menuBarEnabled)
 	{
 		if (ImGui::BeginMainMenuBar())
 		{
 			if (ImGui::BeginMenu("ste"))
 			{
-				if (ImGui::MenuItem("New panel", "Ctrl+N"))
-					CreateNewEditor();
-				if (ImGui::MenuItem("Open file", "Ctrl+O"))
-				{
-					std::vector<std::string> selection = pfd::open_file("Open file", "", { "Any file", "*" }).result();
-					if (selection.size() == 0)
-						std::cout << "File not loaded\n";
-					else
-						fileToEditorMap[selection[0]] = CreateNewEditor(selection[0].c_str());
-				}
-				if (ImGui::MenuItem("Open folder"))
-				{
-					std::string folder = pfd::select_folder("Open folder").result();
-					if (folder.length() == 0)
-						std::cout << "folder selection canceled\n";
-					else
-						CreateNewFolderViewer(folder);
-				}
+				newTextPanelRequested |= ImGui::MenuItem("New text panel", "Ctrl+N");
+				openFileRequested |= ImGui::MenuItem("Open file", "Ctrl+O");
+				openFolderRequested |= ImGui::MenuItem("Open folder");
 				ImGui::MenuItem("Menu bar visible", "F1", &menuBarEnabled);
 				ImGui::EndMenu();
 			}
@@ -211,6 +204,20 @@ void ste::ImGuiController::Tick()
 			}
 			ImGui::EndMainMenuBar();
 		}
+	}
+	if (newTextPanelRequested)
+		CreateNewEditor();
+	else if (openFileRequested)
+	{
+		std::vector<std::string> selection = pfd::open_file("Open file", "", { "Any file", "*" }).result();
+		if (selection.size() > 0) // if not canceled
+			fileToEditorMap[selection[0]] = CreateNewEditor(selection[0].c_str());
+	}
+	else if (openFolderRequested)
+	{
+		std::string folder = pfd::select_folder("Open folder").result();
+		if (folder.length() > 0) // if not canceled
+			CreateNewFolderViewer(folder);
 	}
 
 	{
