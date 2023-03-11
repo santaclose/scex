@@ -1,6 +1,7 @@
 #include "DirectoryFinder.h"
 
 #include <filesystem>
+#include <iostream>
 #include <fstream>
 #include <regex>
 
@@ -65,16 +66,22 @@ bool DirectoryFinder::OnImGui()
 
 void DirectoryFinder::Find()
 {
+	// validate
+	std::string toFindAsStdString = std::string(toFind);
+	std::regex toIncludeAsPattern = std::regex(toInclude);
+	std::regex toExcludeAsPattern = std::regex(toExclude);
+	std::regex toFindAsPattern;
+	if (regexEnabled)
+	{
+		try { toFindAsPattern = caseSensitiveEnabled ? std::regex(toFind) : std::regex(toFind, std::regex_constants::icase); }
+		catch (...) { std::cout << "[DirectoryFinder] Invalid regex given\n"; finderThread = nullptr; return; }
+	}
+
+	// start work
 	{
 		std::lock_guard<std::mutex> guard(finderThreadMutex);
 		resultFiles.clear();
 	}
-
-	std::string toFindAsStdString = std::string(toFind);
-	std::regex toIncludeAsPattern = std::regex(toInclude);
-	std::regex toExcludeAsPattern = std::regex(toExclude);
-	std::regex toFindAsPattern = caseSensitiveEnabled ? std::regex(toFind) : std::regex(toFind, std::regex_constants::icase);
-
 	bool foundInFile = false;
 	for (std::filesystem::recursive_directory_iterator i(directoryPath), end; i != end; ++i)
 	{
