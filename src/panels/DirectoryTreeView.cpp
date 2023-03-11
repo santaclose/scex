@@ -1,5 +1,7 @@
 #include "DirectoryTreeView.h"
 
+#define MAX_SEARCH_RESULTS 50
+
 DirectoryTreeView::DirectoryTreeView(
 	const std::string& folderPath,
 	OnFileClickCallback fileClickCallback,
@@ -46,7 +48,7 @@ bool DirectoryTreeView::OnImGui()
 			if (ImGui::InputText("Find files", findFilesBuffer, FIND_FILES_BUFFER_SIZE)) // true when text changes
 			{
 				searchResults.clear();
-				Trie::GetSuggestions(&searchTrie, std::string(findFilesBuffer), searchResults);
+				Trie::GetSuggestions(&searchTrie, std::string(findFilesBuffer), searchResults, MAX_SEARCH_RESULTS);
 			}
 			bool searchTextFieldHasFocus = ImGui::IsItemFocused();
 			bool pressedEnterOnSearchbarAndThereAreSearchResults = searchTextFieldHasFocus && searchResults.size() > 0 && ImGui::IsKeyDown(ImGuiKey_Enter); // to be able to press enter right after typing without using arrow keys

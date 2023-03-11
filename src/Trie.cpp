@@ -30,8 +30,11 @@ bool Trie::IsLastNode(Node* root)
 	return 1;
 }
 
-void Trie::SuggestionsRec(Node* root, const std::string& currPrefix, std::vector<std::string>& suggestionsOut)
+void Trie::SuggestionsRec(Node* root, const std::string& currPrefix, std::vector<std::string>& suggestionsOut, int maxCount)
 {
+	if (maxCount == suggestionsOut.size())
+		return;
+
 	// found a string in Trie with the given prefix
 	if (root->isWordEnd)
 		suggestionsOut.push_back(currPrefix);
@@ -40,11 +43,11 @@ void Trie::SuggestionsRec(Node* root, const std::string& currPrefix, std::vector
 	{
 		// child node character value
 		char child = item.first;
-		SuggestionsRec(root->children[item.first], currPrefix + child, suggestionsOut);
+		SuggestionsRec(root->children[item.first], currPrefix + child, suggestionsOut, maxCount);
 	}
 }
 
-int Trie::GetSuggestions(Node* root, const std::string& query, std::vector<std::string>& suggestionsOut)
+int Trie::GetSuggestions(Node* root, const std::string& query, std::vector<std::string>& suggestionsOut, int maxCount)
 {
 	Node* pCrawl = root;
 	for (char c : query)
@@ -63,7 +66,7 @@ int Trie::GetSuggestions(Node* root, const std::string& query, std::vector<std::
 		suggestionsOut.push_back(query);
 		return -1;
 	}
-	SuggestionsRec(pCrawl, query, suggestionsOut);
+	SuggestionsRec(pCrawl, query, suggestionsOut, maxCount);
 	return 1;
 }
 
