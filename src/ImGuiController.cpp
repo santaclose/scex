@@ -148,6 +148,7 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
 	io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
+	io.IniFilename = nullptr;
 }
 
 bool ste::ImGuiController::HasControl()
