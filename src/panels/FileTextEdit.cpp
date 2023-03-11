@@ -5,19 +5,19 @@
 #include <portable-file-dialogs.h>
 
 std::unordered_map<std::string, const TextEditor::LanguageDefinition*> FileTextEdit::extensionToLanguageDefinition = {
-	   {".cpp", &TextEditor::LanguageDefinition::CPlusPlus()},
-	   {".hpp", &TextEditor::LanguageDefinition::CPlusPlus()},
-	   {".cc", &TextEditor::LanguageDefinition::CPlusPlus()},
-	   {".hlsl", &TextEditor::LanguageDefinition::HLSL()},
-	   {".glsl", &TextEditor::LanguageDefinition::GLSL()},
-	   {".py", &TextEditor::LanguageDefinition::Python()},
-	   {".c", &TextEditor::LanguageDefinition::C()},
-	   {".h", &TextEditor::LanguageDefinition::C()},
-	   {".sql", &TextEditor::LanguageDefinition::SQL()},
-	   {".as", &TextEditor::LanguageDefinition::AngelScript()},
-	   {".lua",&TextEditor::LanguageDefinition::Lua()},
-	   {".cs",&TextEditor::LanguageDefinition::CSharp()},
-	   {".json",&TextEditor::LanguageDefinition::Json()}
+	{".cpp", &TextEditor::LanguageDefinition::CPlusPlus()},
+	{".hpp", &TextEditor::LanguageDefinition::CPlusPlus()},
+	{".cc", &TextEditor::LanguageDefinition::CPlusPlus()},
+	{".hlsl", &TextEditor::LanguageDefinition::HLSL()},
+	{".glsl", &TextEditor::LanguageDefinition::GLSL()},
+	{".py", &TextEditor::LanguageDefinition::Python()},
+	{".c", &TextEditor::LanguageDefinition::C()},
+	{".h", &TextEditor::LanguageDefinition::C()},
+	{".sql", &TextEditor::LanguageDefinition::SQL()},
+	{".as", &TextEditor::LanguageDefinition::AngelScript()},
+	{".lua",&TextEditor::LanguageDefinition::Lua()},
+	{".cs",&TextEditor::LanguageDefinition::CSharp()},
+	{".json",&TextEditor::LanguageDefinition::Json()}
 };
 
 FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFindFileKeyComboCallback onFindFileKeyComboCallback)
