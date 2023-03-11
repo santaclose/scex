@@ -78,6 +78,7 @@ bool DirectoryTreeView::OnImGui()
 		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.0f, 2.0f });
 		isHoveringNodeThisFrame = false;
 		RecursivelyDisplayDirectoryNode(directoryTreeRoot);
 
@@ -103,7 +104,7 @@ bool DirectoryTreeView::OnImGui()
 			}
 		}
 
-		ImGui::PopStyleVar();
+		ImGui::PopStyleVar(2);
 	}
 	ImGui::End();
 	return windowIsOpen;
@@ -160,7 +161,7 @@ void DirectoryTreeView::RecursivelyDisplayDirectoryNode(const DirectoryTreeViewN
 	ImGui::PushID(&parentNode);
 	if (parentNode.isDirectory)
 	{
-		if (ImGui::TreeNodeEx(parentNode.fileName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth))
+		if (ImGui::TreeNodeEx(parentNode.fileName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding))
 		{
 			if (ImGui::IsItemHovered())
 				SetLastHoveredNode(&parentNode);
@@ -176,7 +177,7 @@ void DirectoryTreeView::RecursivelyDisplayDirectoryNode(const DirectoryTreeViewN
 	}
 	else
 	{
-		if (ImGui::TreeNodeEx(parentNode.fileName.c_str(), ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth))
+		if (ImGui::TreeNodeEx(parentNode.fileName.c_str(), ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding))
 		{
 			if (ImGui::IsItemClicked(0))
 			{
