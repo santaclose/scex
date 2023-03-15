@@ -28,6 +28,7 @@ namespace ste::ImGuiController
 	void OnFileShowInFolder(const std::string& filePath, int folderViewId);
 	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId);
 	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult, int folderViewId);
+	void OnFolderSearchResultFoundOrSearchFinished();
 	void OnFileTextEditFindFileKeyCombo(int folderViewId);
 
 	bool menuBarEnabled = true;
@@ -59,7 +60,7 @@ namespace ste::ImGuiController
 	void CreateNewFolderSearch(const std::string& folderPath, int fromFolderView)
 	{
 		int folderSearchId = folderFinders.size();
-		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick, folderSearchId, fromFolderView));
+		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick, OnFolderSearchResultFoundOrSearchFinished, OnFolderSearchResultFoundOrSearchFinished, folderSearchId, fromFolderView));
 	}
 
 	void InitializeLayout(ImGuiID dock_main_id)
@@ -103,6 +104,10 @@ namespace ste::ImGuiController
 		else
 			targetEditor = editorToFocus = fileToEditorMap[filePath];
 		targetEditor->SetSelection(searchResult.lineNumber - 1, searchResult.startCharIndex, searchResult.lineNumber - 1, searchResult.endCharIndex);
+	}
+	void OnFolderSearchResultFoundOrSearchFinished()
+	{
+		glfwPostEmptyEvent();
 	}
 
 	// ---- Callback from file text editor ---- //

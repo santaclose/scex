@@ -5,11 +5,17 @@
 #include <fstream>
 #include <regex>
 
-DirectoryFinder::DirectoryFinder(const std::string& folderPath, OnResultClickCallback onResultClickCallback, int id, int createdFromFolderView)
+DirectoryFinder::DirectoryFinder(const std::string& folderPath,
+	OnResultClickCallback onResultClickCallback,
+	OnResultFoundCallback onResultFoundCallback,
+	OnSearchFinishedCallback onSearchFinishedCallback,
+	int id, int createdFromFolderView)
 {
 	this->id = id;
 	this->createdFromFolderView = createdFromFolderView;
 	this->onResultClickCallback = onResultClickCallback;
+	this->onResultFoundCallback = onResultFoundCallback;
+	this->onSearchFinishedCallback = onSearchFinishedCallback;
 	panelName = "Folder search##" + std::to_string((int)this);
 	directoryPath = folderPath;
 	toInclude[0] = toExclude[0] = toFind[0] = '\0';
@@ -123,6 +129,7 @@ void DirectoryFinder::Find()
 							foundInFile = true;
 						}
 						resultFiles.back().results.push_back({ std::to_string(curLine) + ": " + line, curLine, startChar, startChar + (int)toFindAsStdString.length()});
+						if (onResultFoundCallback != nullptr) onResultFoundCallback();
 					}
 				}
 				else // caseSensitiveEnabled
@@ -142,6 +149,7 @@ void DirectoryFinder::Find()
 							foundInFile = true;
 						}
 						resultFiles.back().results.push_back({ std::to_string(curLine) + ": " + line, curLine, startChar, startChar + (int)toFindAsStdString.length() });
+						if (onResultFoundCallback != nullptr) onResultFoundCallback();
 					}
 				}
 			}
@@ -157,6 +165,7 @@ void DirectoryFinder::Find()
 						foundInFile = true;
 					}
 					resultFiles.back().results.push_back({ std::to_string(curLine) + ": " + line, curLine, (int)lineMatch.position(), (int)(lineMatch.position() + lineMatch.length()) });
+					if (onResultFoundCallback != nullptr) onResultFoundCallback();
 				}
 			}
 		}
@@ -164,4 +173,5 @@ void DirectoryFinder::Find()
 	}
 
 	finderThread = nullptr;
+	if (onSearchFinishedCallback != nullptr) onSearchFinishedCallback();
 }
