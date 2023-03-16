@@ -79,10 +79,11 @@ bool DirectoryTreeView::OnImGui()
 			ImGui::Separator();
 		}
 
+		isHoveringNodeThisFrame = false;
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.0f, 2.0f });
-		isHoveringNodeThisFrame = false;
 		RecursivelyDisplayDirectoryNode(directoryTreeRoot);
+		ImGui::PopStyleVar(2);
 
 		if (lastHoveredNode != nullptr)
 		{
@@ -105,8 +106,6 @@ bool DirectoryTreeView::OnImGui()
 				ImGui::EndPopup();
 			}
 		}
-
-		ImGui::PopStyleVar(2);
 	}
 	ImGui::End();
 	return windowIsOpen;
