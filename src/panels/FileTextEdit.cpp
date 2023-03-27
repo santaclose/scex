@@ -63,6 +63,7 @@ bool FileTextEdit::OnImGui()
 	ImGui::PopStyleVar();
 
 	bool isFocused = ImGui::IsWindowFocused();
+	bool requestingGoToLinePopup = false;
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -121,6 +122,13 @@ bool FileTextEdit::OnImGui()
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Find"))
+		{
+			if (ImGui::MenuItem("Go to line", "Ctrl+G"))
+				requestingGoToLinePopup = true;
+			ImGui::EndMenu();
+		}
+
 		auto cpos = editor->GetCursorPosition();
 		ImGui::Text("%6d/%-6d %6d lines | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor->GetTotalLines(),
 			editor->IsOverwrite() ? "Ovr" : "Ins",
@@ -137,8 +145,25 @@ bool FileTextEdit::OnImGui()
 			OnSaveCommand();
 		if (ctrlPressed && ImGui::IsKeyDown(ImGuiKey_R))
 			OnReloadCommand();
+		if (ctrlPressed && ImGui::IsKeyDown(ImGuiKey_G))
+			requestingGoToLinePopup = true;
 		if (onFindFileKeyComboCallback != nullptr && ctrlPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
 			onFindFileKeyComboCallback(createdFromFolderView);
+	}
+
+	if (requestingGoToLinePopup) ImGui::OpenPopup("go_to_line_popup");
+	if (ImGui::BeginPopup("go_to_line_popup"))
+	{
+		static int targetLine;
+		ImGui::SetKeyboardFocusHere();
+		ImGui::InputInt("Line", &targetLine);
+		if (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))
+		{
+			editor->SetCursorPosition({ targetLine < 1 ? 0 : targetLine - 1, 0 });
+			ImGui::CloseCurrentPopup();
+			ImGui::GetIO().ClearInputKeys();
+		}
+		ImGui::EndPopup();
 	}
 
 	ImGui::End();
