@@ -1,5 +1,7 @@
 #include "DirectoryTreeView.h"
 
+#include <iostream>
+
 #define MAX_SEARCH_RESULTS 50
 
 DirectoryTreeView::DirectoryTreeView(
@@ -129,10 +131,14 @@ void DirectoryTreeView::RecursivelyAddDirectoryNodes(DirectoryTreeViewNode& pare
 			RecursivelyAddDirectoryNodes(childNode, std::filesystem::directory_iterator(entry));
 		else
 		{
-			std::string fileName = entry.path().filename().string();
-			std::string filePath = entry.path().string();
-			Trie::Insert(&searchTrie, fileName);
-			fileNameToPath[fileName].push_back(filePath);
+			try
+			{
+				std::string fileName = entry.path().filename().string();
+				std::string filePath = entry.path().string();
+				Trie::Insert(&searchTrie, fileName);
+				fileNameToPath[fileName].push_back(filePath);
+			}
+			catch (...) { std::cout << "[DirectoryTreeView] Skipping file with non ASCII path: " << childNode.fullPath << std::endl; }
 		}
 	}
 
