@@ -169,6 +169,8 @@ bool FileTextEdit::OnImGui()
 		ImGui::InputInt("Line", &targetLine);
 		if (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))
 		{
+			editor->ClearExtraCursors();
+			editor->ClearSelections();
 			editor->SetCursorPosition({ targetLine < 1 ? 0 : targetLine - 1, 0 });
 			ImGui::CloseCurrentPopup();
 			ImGui::GetIO().ClearInputKeys();
