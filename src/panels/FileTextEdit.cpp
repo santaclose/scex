@@ -4,6 +4,8 @@
 #include <fstream>
 #include <portable-file-dialogs.h>
 
+#define FIND_POPUP_TEXT_FIELD_LENGTH 128
+
 std::unordered_map<std::string, const TextEditor::LanguageDefinition*> FileTextEdit::extensionToLanguageDefinition = {
 	{".cpp", &TextEditor::LanguageDefinition::CPlusPlus()},
 	{".hpp", &TextEditor::LanguageDefinition::CPlusPlus()},
@@ -64,6 +66,7 @@ bool FileTextEdit::OnImGui()
 
 	bool isFocused = ImGui::IsWindowFocused();
 	bool requestingGoToLinePopup = false;
+	bool requestingFindPopup = false;
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -126,6 +129,8 @@ bool FileTextEdit::OnImGui()
 		{
 			if (ImGui::MenuItem("Go to line", "Ctrl+G"))
 				requestingGoToLinePopup = true;
+			if (ImGui::MenuItem("Find", "Ctrl+F"))
+				requestingFindPopup = true;
 			ImGui::EndMenu();
 		}
 
@@ -141,14 +146,19 @@ bool FileTextEdit::OnImGui()
 	if (isFocused)
 	{
 		bool ctrlPressed = ImGui::GetIO().KeyCtrl;
-		if (ctrlPressed && ImGui::IsKeyDown(ImGuiKey_S))
-			OnSaveCommand();
-		if (ctrlPressed && ImGui::IsKeyDown(ImGuiKey_R))
-			OnReloadCommand();
-		if (ctrlPressed && ImGui::IsKeyDown(ImGuiKey_G))
-			requestingGoToLinePopup = true;
-		if (onFindFileKeyComboCallback != nullptr && ctrlPressed && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
-			onFindFileKeyComboCallback(createdFromFolderView);
+		if (ctrlPressed)
+		{
+			if (ImGui::IsKeyDown(ImGuiKey_S))
+				OnSaveCommand();
+			if (ImGui::IsKeyDown(ImGuiKey_R))
+				OnReloadCommand();
+			if (ImGui::IsKeyDown(ImGuiKey_G))
+				requestingGoToLinePopup = true;
+			if (ImGui::IsKeyDown(ImGuiKey_F))
+				requestingFindPopup = true;
+			if (onFindFileKeyComboCallback != nullptr && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
+				onFindFileKeyComboCallback(createdFromFolderView);
+		}
 	}
 
 	if (requestingGoToLinePopup) ImGui::OpenPopup("go_to_line_popup");
@@ -163,6 +173,25 @@ bool FileTextEdit::OnImGui()
 			ImGui::CloseCurrentPopup();
 			ImGui::GetIO().ClearInputKeys();
 		}
+		else if (ImGui::IsKeyDown(ImGuiKey_Escape))
+			ImGui::CloseCurrentPopup();
+		ImGui::EndPopup();
+	}
+
+	if (requestingFindPopup) ImGui::OpenPopup("find_popup");
+	if (ImGui::BeginPopup("find_popup"))
+	{
+		static char toFindText[FIND_POPUP_TEXT_FIELD_LENGTH];
+		ImGui::SetKeyboardFocusHere();
+		ImGui::InputText("To find", toFindText, FIND_POPUP_TEXT_FIELD_LENGTH, ImGuiInputTextFlags_AutoSelectAll);
+		if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))
+		{
+			editor->ClearExtraCursors();
+			editor->SelectNextOccurrenceOf(toFindText, FIND_POPUP_TEXT_FIELD_LENGTH);
+		}
+		else if (ImGui::IsKeyDown(ImGuiKey_Escape))
+			ImGui::CloseCurrentPopup();
+
 		ImGui::EndPopup();
 	}
 
