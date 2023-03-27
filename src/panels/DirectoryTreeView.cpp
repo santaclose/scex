@@ -53,7 +53,7 @@ bool DirectoryTreeView::OnImGui()
 				Trie::GetSuggestions(&searchTrie, std::string(findFilesBuffer), searchResults, MAX_SEARCH_RESULTS);
 			}
 			bool searchTextFieldHasFocus = ImGui::IsItemFocused();
-			bool pressedEnterOnSearchbarAndThereAreSearchResults = searchTextFieldHasFocus && searchResults.size() > 0 && ImGui::IsKeyDown(ImGuiKey_Enter); // to be able to press enter right after typing without using arrow keys
+			bool pressedEnterOnSearchbarAndThereAreSearchResults = searchTextFieldHasFocus && searchResults.size() > 0 && (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter)); // to be able to press enter right after typing without using arrow keys
 
 			bool callbackCalled = false;
 			for (const std::string& searchResult : searchResults)
@@ -67,7 +67,7 @@ bool DirectoryTreeView::OnImGui()
 					{
 						if ((fileNameIsUnique ? ImGui::Selectable(searchResult.c_str()) : ImGui::Selectable((searchResult + " (" + filePath + ")").c_str())) ||
 							pressedEnterOnSearchbarAndThereAreSearchResults ||
-							ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))
+							ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
 						{
 							fileClickCallback(filePath, id);
 							ImGui::GetIO().ClearInputKeys();
