@@ -131,14 +131,8 @@ void DirectoryTreeView::RecursivelyAddDirectoryNodes(DirectoryTreeViewNode& pare
 			RecursivelyAddDirectoryNodes(childNode, std::filesystem::directory_iterator(entry));
 		else
 		{
-			try
-			{
-				std::string fileName = entry.path().filename().string();
-				std::string filePath = entry.path().string();
-				Trie::Insert(&searchTrie, fileName);
-				fileNameToPath[fileName].push_back(filePath);
-			}
-			catch (...) { std::cout << "[DirectoryTreeView] Skipping file with non ASCII path: " << childNode.fullPath << std::endl; }
+			Trie::Insert(&searchTrie, childNode.fileName);
+			fileNameToPath[childNode.fileName].push_back(childNode.fullPath);
 		}
 	}
 

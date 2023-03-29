@@ -5,6 +5,8 @@
 #include <fstream>
 #include <regex>
 
+#include <Utils.h>
+
 DirectoryFinder::DirectoryFinder(const std::string& folderPath,
 	OnResultClickCallback onResultClickCallback,
 	OnResultFoundCallback onResultFoundCallback,
@@ -89,7 +91,7 @@ void DirectoryFinder::Find()
 		resultFiles.clear();
 	}
 	bool foundInFile = false;
-	for (std::filesystem::recursive_directory_iterator i(directoryPath), end; i != end; ++i)
+	for (std::filesystem::recursive_directory_iterator i(Utils::Utf8ToWstring(directoryPath)), end; i != end; ++i)
 	{
 		if (finderThread == nullptr)
 			break;
@@ -98,8 +100,9 @@ void DirectoryFinder::Find()
 
 		foundInFile = false;
 
-		std::string filePath = i->path().string();
-		std::string fileName = i->path().filename().string();
+		std::string fileName = i->path().filename().u8string();
+		std::string filePath = i->path().u8string();
+
 		std::smatch filePathMatch;
 		if (toInclude[0] != '\0' && !std::regex_match(filePath, filePathMatch, toIncludeAsPattern))
 			continue;
@@ -107,7 +110,7 @@ void DirectoryFinder::Find()
 			continue;
 
 		std::ifstream fileInput;
-		fileInput.open(filePath.c_str());
+		fileInput.open(Utils::Utf8ToWstring(filePath));
 		std::string line;
 		int curLine = 0;
 		while (std::getline(fileInput, line))

@@ -4,6 +4,8 @@
 #include <fstream>
 #include <portable-file-dialogs.h>
 
+#include <Utils.h>
+
 #define FIND_POPUP_TEXT_FIELD_LENGTH 128
 
 std::unordered_map<std::string, const TextEditor::LanguageDefinition*> FileTextEdit::extensionToLanguageDefinition = {
@@ -36,7 +38,7 @@ FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderVi
 		associatedFile = std::string(filePath);
 		auto pathObject = std::filesystem::path(filePath);
 		panelName = pathObject.filename().string() + "##" + std::to_string((int)this);
-		std::ifstream t(filePath);
+		std::ifstream t(Utils::Utf8ToWstring(filePath));
 		std::string str((std::istreambuf_iterator<char>(t)),
 			std::istreambuf_iterator<char>());
 		editor->SetText(str);
@@ -224,7 +226,7 @@ void FileTextEdit::SetShowDebugPanel(bool value)
 
 void FileTextEdit::OnReloadCommand()
 {
-	std::ifstream t(associatedFile);
+	std::ifstream t(Utils::Utf8ToWstring(associatedFile));
 	std::string str((std::istreambuf_iterator<char>(t)),
 		std::istreambuf_iterator<char>());
 	editor->SetText(str);
@@ -238,7 +240,7 @@ void FileTextEdit::OnLoadFromCommand()
 		std::cout << "File not loaded\n";
 	else
 	{
-		std::ifstream t(selection[0]);
+		std::ifstream t(Utils::Utf8ToWstring(selection[0]));
 		std::string str((std::istreambuf_iterator<char>(t)),
 			std::istreambuf_iterator<char>());
 		editor->SetText(str);
@@ -262,7 +264,7 @@ void FileTextEdit::OnSaveCommand()
 		hasAssociatedFile = true;
 		panelName = std::filesystem::path(destination).filename().string() + "##" + std::to_string((int)this);
 		std::ofstream outFile;
-		outFile.open(destination);
+		outFile.open(Utils::Utf8ToWstring(destination));
 		outFile << textToSave;
 		outFile.close();
 	}

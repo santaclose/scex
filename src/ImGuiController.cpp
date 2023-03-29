@@ -16,6 +16,7 @@
 #include <panels/DirectoryTreeView.h>
 #include <panels/DirectoryFinder.h>
 #include <panels/FileTextEdit.h>
+#include <Utils.h>
 
 namespace ste::ImGuiController
 {
@@ -73,6 +74,7 @@ namespace ste::ImGuiController
 	// ---- Callbacks from folder view ---- //
 	void OnFolderShow(const std::string& folderPath, int folderViewId)
 	{
+		// doesn't work with non ASCII
 		std::string command = "explorer \"" + folderPath + "\"";
 		system(command.c_str());
 	}
@@ -83,8 +85,9 @@ namespace ste::ImGuiController
 	void OnFileShowInFolder(const std::string& filePath, int folderViewId)
 	{
 		auto path = std::filesystem::path(filePath);
-		std::string parentFolderPath = path.parent_path().string();
-		std::string command = "explorer /select,\"" + path.string() + "\",\"" + parentFolderPath + "\"";
+		std::string parentFolderPath = path.parent_path().u8string();
+		// doesn't work with non ASCII
+		std::string command = "explorer /select,\"" + path.u8string() + "\",\"" + parentFolderPath + "\"";
 		system(command.c_str());
 	}
 	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId)
