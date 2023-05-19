@@ -4,7 +4,13 @@
 #include <vector>
 #include <glad/glad.h>
 
+#include <PathUtils.h>
 #include <ImGuiController.h>
+
+#ifdef STE_PLATFORM_WINDOWS
+#include <windows.h>
+#include <atlstr.h>
+#endif
 
 #define REDRAW_COUNT 5
 #define BACKGROUND_COLOR 0.1
@@ -58,14 +64,26 @@ void APIENTRY glDebugOutput(GLenum source,
 }
 #endif
 
+#ifdef STE_PLATFORM_WINDOWS
+int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+{
+	LPWSTR* szArglist;
+	int argc;
+	szArglist = CommandLineToArgvW(GetCommandLine(), &argc);
+	std::string firstArgument = CW2A(szArglist[0]);
+	std::string secondArgument;
+	if (argc > 1) secondArgument = CW2A(szArglist[1]);
+#else
 int main(int argc, char** argv)
 {
+	std::string firstArgument(argv[0]);
+	std::string secondArgument;
+	if (argc > 1) secondArgument = std::string(argv[1]);
+#endif
+
+	PathUtils::SetProgramDirectory(firstArgument);
+
 	int redrawCounter = REDRAW_COUNT;
-	if (!std::filesystem::is_directory("assets"))
-	{
-		std::filesystem::current_path("../../../");
-		std::cout << "Adjusting working directory\n";
-	}
 
 	GLFWwindow* window;
 
@@ -90,7 +108,7 @@ int main(int argc, char** argv)
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	if (argc > 1)
-		ste::ImGuiController::Setup(window, argv[1]);
+		ste::ImGuiController::Setup(window, secondArgument);
 	else
 		ste::ImGuiController::Setup(window);
 

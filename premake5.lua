@@ -24,7 +24,7 @@ group "Dependencies"
 group ""
 
 project "ste"
-	kind "ConsoleApp"
+	kind "WindowedApp"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "on"

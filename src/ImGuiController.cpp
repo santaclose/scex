@@ -17,6 +17,7 @@
 #include <panels/DirectoryFinder.h>
 #include <panels/FileTextEdit.h>
 #include <Utils.h>
+#include <PathUtils.h>
 
 namespace ste::ImGuiController
 {
@@ -136,10 +137,10 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
 
-	std::string fontPath = "assets/fonts/FiraCode/FiraCode-Regular.ttf";
+	std::string fontPath = PathUtils::GetAssetsDirectory() + "fonts/FiraCode/FiraCode-Regular.ttf";
 	float fontSize = 17.0f;
 	// Load from config file if exists
-	std::ifstream i("assets/config.json");
+	std::ifstream i(PathUtils::GetAssetsDirectory() + "config.json");
 	if (i.good())
 	{
 		nlohmann::json j;
