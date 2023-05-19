@@ -89,7 +89,10 @@ int main(int argc, char** argv)
 	glfwMakeContextCurrent(window);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-	ste::ImGuiController::Setup(window);
+	if (argc > 1)
+		ste::ImGuiController::Setup(window, argv[1]);
+	else
+		ste::ImGuiController::Setup(window);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{

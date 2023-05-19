@@ -159,6 +159,12 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	io.IniFilename = nullptr;
 }
 
+void ste::ImGuiController::Setup(GLFWwindow* window, const std::string& fileToOpen)
+{
+	Setup(window);
+	fileToEditorMap[fileToOpen] = CreateNewEditor(fileToOpen.c_str());
+}
+
 bool ste::ImGuiController::HasControl()
 {
 	return ImGui::GetIO().WantCaptureMouse;
