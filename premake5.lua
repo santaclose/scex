@@ -54,7 +54,8 @@ project "ste"
 		"vendor/imgui",
 		"vendor/ImGuiColorTextEdit",
 		"vendor/json",
-		"vendor/portable-file-dialogs"
+		"vendor/portable-file-dialogs",
+		"vendor/stb"
 	}
 
 	links 

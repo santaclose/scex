@@ -4,6 +4,7 @@
 #include <vector>
 #include <glad/glad.h>
 
+#include <Utils.h>
 #include <PathUtils.h>
 #include <ImGuiController.h>
 
@@ -95,13 +96,15 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 #endif
 
-	window = glfwCreateWindow(1280, 720, "ste", NULL, NULL);
+	window = glfwCreateWindow(argc > 1 ? 720 : 1280, 720, "ste", NULL, NULL);
 
 	if (!window)
 	{
 		glfwTerminate();
 		return -1;
 	}
+
+	Utils::SetWindowIcon(PathUtils::GetAssetsDirectory() + "icon32.png", window);
 
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
