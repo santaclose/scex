@@ -164,6 +164,7 @@ void ste::ImGuiController::Setup(GLFWwindow* window, const std::string& fileToOp
 {
 	Setup(window);
 	fileToEditorMap[fileToOpen] = CreateNewEditor(fileToOpen.c_str());
+	menuBarEnabled = false;
 }
 
 bool ste::ImGuiController::HasControl()
