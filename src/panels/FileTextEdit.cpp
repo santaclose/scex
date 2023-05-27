@@ -124,6 +124,32 @@ bool FileTextEdit::OnImGui()
 				editor->SetPalette(TextEditor::GetRetroBluePalette());
 			ImGui::SliderInt("Tab size", &tabSize, 1, 8);
 			editor->SetTabSize(tabSize);
+			if (ImGui::BeginMenu("Syntax highlighting"))
+			{
+				if (ImGui::MenuItem("C++"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::CPlusPlus());
+				if (ImGui::MenuItem("C"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::C());
+				if (ImGui::MenuItem("C#"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::CSharp());
+				if (ImGui::MenuItem("Python"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
+				if (ImGui::MenuItem("Lua"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::Lua());
+				if (ImGui::MenuItem("Json"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::Json());
+				if (ImGui::MenuItem("SQL"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::SQL());
+				if (ImGui::MenuItem("AngelScript"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::AngelScript());
+				if (ImGui::MenuItem("GLSL"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
+				if (ImGui::MenuItem("HLSL"))
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::HLSL());
+					
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenu();
 		}
 
