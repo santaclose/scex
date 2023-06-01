@@ -21,6 +21,8 @@
 
 namespace ste::ImGuiController
 {
+	int folderViewForLastFocusedPanel = -1;
+
 	ImGuiID leftDockID = -1;
 	ImGuiID rightDockID = -1;
 
@@ -31,7 +33,7 @@ namespace ste::ImGuiController
 	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId);
 	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult, int folderViewId);
 	void OnFolderSearchResultFoundOrSearchFinished();
-	void OnFileTextEditFindFileKeyCombo(int folderViewId);
+	void OnPanelFocused(int folderViewId);
 
 	bool menuBarEnabled = true;
 	bool textEditDebugInfo = false;
@@ -49,7 +51,7 @@ namespace ste::ImGuiController
 	FileTextEdit* CreateNewEditor(const char* filePath = nullptr, int fromFolderView = -1)
 	{
 		int fileTextEditId = fileTextEdits.size();
-		fileTextEdits.push_back(new FileTextEdit(filePath, fileTextEditId, fromFolderView, OnFileTextEditFindFileKeyCombo));
+		fileTextEdits.push_back(new FileTextEdit(filePath, fileTextEditId, fromFolderView, OnPanelFocused));
 		fileTextEdits.back()->SetShowDebugPanel(textEditDebugInfo);
 		return fileTextEdits.back();
 	}
@@ -57,12 +59,12 @@ namespace ste::ImGuiController
 	void CreateNewFolderViewer(const std::string& folderPath)
 	{
 		int folderViewerId = folderViewers.size();
-		folderViewers.push_back(new DirectoryTreeView(folderPath, OnFileClickedInFolderView, &folderViewFileContextMenuOptions, &folderViewFolderContextMenuOptions, folderViewerId));
+		folderViewers.push_back(new DirectoryTreeView(folderPath, OnFileClickedInFolderView, OnPanelFocused, &folderViewFileContextMenuOptions, &folderViewFolderContextMenuOptions, folderViewerId));
 	}
 	void CreateNewFolderSearch(const std::string& folderPath, int fromFolderView)
 	{
 		int folderSearchId = folderFinders.size();
-		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick, OnFolderSearchResultFoundOrSearchFinished, OnFolderSearchResultFoundOrSearchFinished, folderSearchId, fromFolderView));
+		folderFinders.push_back(new DirectoryFinder(folderPath, OnFolderSearchResultClick, OnFolderSearchResultFoundOrSearchFinished, OnFolderSearchResultFoundOrSearchFinished, OnPanelFocused, folderSearchId, fromFolderView));
 	}
 
 	void InitializeLayout(ImGuiID dock_main_id)
@@ -114,12 +116,10 @@ namespace ste::ImGuiController
 		glfwPostEmptyEvent();
 	}
 
-	// ---- Callback from file text editor ---- //
-	void OnFileTextEditFindFileKeyCombo(int folderViewId)
+	// ---- Generic Callbacks ---- //
+	void OnPanelFocused(int folderViewId)
 	{
-		if (folderViewId < 0 || folderViewers[folderViewId] == nullptr)
-			return;
-		folderViewers[folderViewId]->RunSearch();
+		folderViewForLastFocusedPanel = folderViewId;
 	}
 }
 
@@ -185,13 +185,15 @@ void ste::ImGuiController::Tick()
 	bool newTextPanelRequested = false;
 	bool openFileRequested = false;
 	bool openFolderRequested = false;
+	bool fileSearchRequested = false;
 
 	bool ctrlKeyDown = ImGui::GetIO().KeyCtrl;
 	if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_F1)))
 		menuBarEnabled = !menuBarEnabled;
 
-	newTextPanelRequested |= ctrlKeyDown && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N));
-	openFileRequested |= ctrlKeyDown && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O));
+	newTextPanelRequested |= ctrlKeyDown && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_N), false);
+	openFileRequested |= ctrlKeyDown && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O), false);
+	fileSearchRequested |= ctrlKeyDown && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false);
 
 	if (menuBarEnabled)
 	{
@@ -234,6 +236,11 @@ void ste::ImGuiController::Tick()
 		std::string folder = pfd::select_folder("Open folder").result();
 		if (folder.length() > 0) // if not canceled
 			CreateNewFolderViewer(folder);
+	}
+	else if (fileSearchRequested)
+	{
+		if (folderViewForLastFocusedPanel >= 0 && folderViewers[folderViewForLastFocusedPanel] != nullptr)
+			folderViewers[folderViewForLastFocusedPanel]->RunSearch();
 	}
 
 	{

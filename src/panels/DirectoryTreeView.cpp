@@ -7,6 +7,7 @@
 DirectoryTreeView::DirectoryTreeView(
 	const std::string& folderPath,
 	OnFileClickCallback fileClickCallback,
+	OnFocusedCallback onFocusedCallback,
 	std::vector<std::pair<std::string, OnContextMenuCallback>>* fileContextMenuOptions,
 	std::vector<std::pair<std::string, OnContextMenuCallback>>* folderContextMenuOptions,
 	int id)
@@ -15,6 +16,7 @@ DirectoryTreeView::DirectoryTreeView(
 	panelName = "Folder view##" + std::to_string((int)this);
 	directoryPath = folderPath;
 	this->fileClickCallback = fileClickCallback;
+	this->onFocusedCallback = onFocusedCallback;
 	this->fileContextMenuOptions = fileContextMenuOptions;
 	this->folderContextMenuOptions = folderContextMenuOptions;
 	findFilesBuffer[0] = '\0';
@@ -34,8 +36,8 @@ bool DirectoryTreeView::OnImGui()
 		ImGui::SetNextWindowFocus();
 	if (ImGui::Begin(panelName.c_str(), &windowIsOpen, ImGuiWindowFlags_NoSavedSettings))
 	{
-		if (ImGui::IsWindowFocused() && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
-			RunSearch();
+		if (ImGui::IsWindowFocused() && onFocusedCallback != nullptr)
+			onFocusedCallback(this->id);
 
 		if (searching)
 		{

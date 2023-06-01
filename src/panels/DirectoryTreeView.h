@@ -23,8 +23,11 @@ struct DirectoryTreeView
 {
 	typedef void (*OnFileClickCallback)(const std::string& filePath, int directoryTreeViewId);
 	typedef void (*OnContextMenuCallback)(const std::string& path, int directoryTreeViewId);
+	typedef void (*OnFocusedCallback)(int folderViewId);
 
-	DirectoryTreeView(const std::string& folderPath, OnFileClickCallback fileClickCallback = nullptr,
+	DirectoryTreeView(const std::string& folderPath,
+		OnFileClickCallback fileClickCallback = nullptr,
+		OnFocusedCallback onFocusedCallback = nullptr,
 		std::vector<std::pair<std::string, OnContextMenuCallback>>* fileContextMenuOptions = nullptr,
 		std::vector<std::pair<std::string, OnContextMenuCallback>>* folderContextMenuOptions = nullptr,
 		int id = -1);
@@ -44,6 +47,7 @@ private:
 
 	DirectoryTreeViewNode directoryTreeRoot;
 	OnFileClickCallback fileClickCallback = nullptr;
+	OnFocusedCallback onFocusedCallback = nullptr;
 
 	bool isHoveringNodeThisFrame = false;
 	const DirectoryTreeViewNode* lastHoveredNode = nullptr;

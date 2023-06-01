@@ -24,11 +24,11 @@ std::unordered_map<std::string, const TextEditor::LanguageDefinition*> FileTextE
 	{".json",&TextEditor::LanguageDefinition::Json()}
 };
 
-FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFindFileKeyComboCallback onFindFileKeyComboCallback)
+FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFocusedCallback onFocusedCallback)
 {
 	this->id = id;
 	this->createdFromFolderView = createdFromFolderView;
-	this->onFindFileKeyComboCallback = onFindFileKeyComboCallback;
+	this->onFocusedCallback = onFocusedCallback;
 	editor = new TextEditor();
 	if (filePath == nullptr)
 		panelName = "untitled##" + std::to_string((int)this);
@@ -65,6 +65,9 @@ bool FileTextEdit::OnImGui()
 		ImGuiWindowFlags_NoSavedSettings |
 		(editor->GetUndoIndex() != undoIndexInDisk ? ImGuiWindowFlags_UnsavedDocument : 0x0));
 	ImGui::PopStyleVar();
+
+	if (ImGui::IsWindowFocused() && onFocusedCallback != nullptr)
+		onFocusedCallback(this->createdFromFolderView);
 
 	bool isFocused = ImGui::IsWindowFocused();
 	bool requestingGoToLinePopup = false;
@@ -184,8 +187,6 @@ bool FileTextEdit::OnImGui()
 				requestingGoToLinePopup = true;
 			if (ImGui::IsKeyDown(ImGuiKey_F))
 				requestingFindPopup = true;
-			if (onFindFileKeyComboCallback != nullptr && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_P), false))
-				onFindFileKeyComboCallback(createdFromFolderView);
 		}
 	}
 

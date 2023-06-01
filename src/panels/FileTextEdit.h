@@ -4,9 +4,12 @@
 
 struct FileTextEdit
 {
-	typedef void (*OnFindFileKeyComboCallback)(int linkedFolderView);
+	typedef void (*OnFocusedCallback)(int folderViewId);
 
-	FileTextEdit(const char* filePath = nullptr, int id = -1, int createdFromFolderView = -1, OnFindFileKeyComboCallback onFindFileKeyComboCallback = nullptr);
+	FileTextEdit(const char* filePath = nullptr,
+		int id = -1,
+		int createdFromFolderView = -1,
+		OnFocusedCallback onFocusedCallback = nullptr);
 	~FileTextEdit();
 	bool OnImGui();
 	void SetSelection(int startLine, int startChar, int endLine, int endChar);
@@ -23,7 +26,7 @@ private:
 	int id = -1;
 	int createdFromFolderView = -1;
 
-	OnFindFileKeyComboCallback onFindFileKeyComboCallback = nullptr;
+	OnFocusedCallback onFocusedCallback = nullptr;
 
 	TextEditor* editor = nullptr;
 	bool showDebugPanel = false;
