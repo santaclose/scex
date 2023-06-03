@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <iostream>
 #include <fstream>
-#include <regex>
+#include <boost/regex.hpp>
 
 #include <Utils.h>
 
@@ -81,12 +81,12 @@ void DirectoryFinder::Find()
 {
 	// validate
 	std::string toFindAsStdString = std::string(toFind);
-	std::regex toIncludeAsPattern = std::regex(toInclude);
-	std::regex toExcludeAsPattern = std::regex(toExclude);
-	std::regex toFindAsPattern;
+	boost::regex toIncludeAsPattern = boost::regex(toInclude);
+	boost::regex toExcludeAsPattern = boost::regex(toExclude);
+	boost::regex toFindAsPattern;
 	if (regexEnabled)
 	{
-		try { toFindAsPattern = caseSensitiveEnabled ? std::regex(toFind) : std::regex(toFind, std::regex_constants::icase); }
+		try { toFindAsPattern = caseSensitiveEnabled ? boost::regex(toFind) : boost::regex(toFind, boost::regex_constants::icase); }
 		catch (...) { std::cout << "[DirectoryFinder] Invalid regex given\n"; finderThread = nullptr; return; }
 	}
 
@@ -108,10 +108,10 @@ void DirectoryFinder::Find()
 		std::string fileName = i->path().filename().u8string();
 		std::string filePath = i->path().u8string();
 
-		std::smatch filePathMatch;
-		if (toInclude[0] != '\0' && !std::regex_match(filePath, filePathMatch, toIncludeAsPattern))
+		boost::smatch filePathMatch;
+		if (toInclude[0] != '\0' && !boost::regex_match(filePath, filePathMatch, toIncludeAsPattern))
 			continue;
-		if (toExclude[0] != '\0' && std::regex_match(filePath, filePathMatch, toExcludeAsPattern))
+		if (toExclude[0] != '\0' && boost::regex_match(filePath, filePathMatch, toExcludeAsPattern))
 			continue;
 
 		std::ifstream fileInput;
@@ -163,8 +163,8 @@ void DirectoryFinder::Find()
 			}
 			else // regexEnabled
 			{
-				std::smatch lineMatch;
-				if (std::regex_search(line, lineMatch, toFindAsPattern))
+				boost::smatch lineMatch;
+				if (boost::regex_search(line, lineMatch, toFindAsPattern))
 				{
 					std::lock_guard<std::mutex> guard(finderThreadMutex);
 					if (!foundInFile)

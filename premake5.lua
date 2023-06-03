@@ -37,7 +37,8 @@ project "ste"
 		"src/**.h",
 		"src/**.hpp",
 		"src/**.cpp",
-		"vendor/ImGuiColorTextEdit/**.cpp",
+		"vendor/ImGuiColorTextEdit/*.cpp",
+		"vendor/ImGuiColorTextEdit/vendor/regex/src/**.cpp",
 		"vendor/load.cpp"
 	}
 
@@ -53,6 +54,7 @@ project "ste"
 		"vendor/Glad/include",
 		"vendor/imgui",
 		"vendor/ImGuiColorTextEdit",
+		"vendor/ImGuiColorTextEdit/vendor/regex/include",
 		"vendor/json",
 		"vendor/portable-file-dialogs",
 		"vendor/stb"
