@@ -127,6 +127,9 @@ bool FileTextEdit::OnImGui()
 				editor->SetPalette(TextEditor::GetRetroBluePalette());
 			ImGui::SliderInt("Tab size", &tabSize, 1, 8);
 			editor->SetTabSize(tabSize);
+			static bool showSpaces = editor->IsShowingWhitespaces();
+			if (ImGui::MenuItem("Show spaces", nullptr, &showSpaces))
+				editor->SetShowWhitespaces(!(editor->IsShowingWhitespaces()));
 			if (ImGui::BeginMenu("Syntax highlighting"))
 			{
 				if (ImGui::MenuItem("C++"))
