@@ -86,6 +86,7 @@ bool DirectoryTreeView::OnImGui()
 		isHoveringNodeThisFrame = false;
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.0f, 2.0f });
+		ImGui::SetNextItemOpen(true);
 		RecursivelyDisplayDirectoryNode(directoryTreeRoot);
 		ImGui::PopStyleVar(2);
 
