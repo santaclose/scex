@@ -20,7 +20,7 @@ DirectoryTreeView::DirectoryTreeView(
 	this->fileContextMenuOptions = fileContextMenuOptions;
 	this->folderContextMenuOptions = folderContextMenuOptions;
 	findFilesBuffer[0] = '\0';
-	directoryTreeRoot = CreateDirectoryNodeTreeFromPath(folderPath);
+	directoryTreeRoot = CreateDirectoryNodeTreeFromPath(directoryPath);
 }
 
 DirectoryTreeView::~DirectoryTreeView()
@@ -100,6 +100,11 @@ bool DirectoryTreeView::OnImGui()
 			}
 			if (vectorToUse->size() > 0 && ImGui::BeginPopup(lastHoveredNode->isDirectory ? "folder_right_click_popup" : "file_right_click_popup"))
 			{
+				if (lastHoveredNode == &directoryTreeRoot && ImGui::Selectable("Refresh folder"))
+				{
+					Refresh();
+					ImGui::CloseCurrentPopup();
+				}
 				for (auto& item : *vectorToUse)
 				{
 					if (ImGui::Selectable(item.first.c_str()))
@@ -121,6 +126,17 @@ void DirectoryTreeView::RunSearch()
 	requestingFocus = searching = true;
 	findFilesBuffer[0] = '\0';
 	searchResults.clear();
+}
+
+void DirectoryTreeView::Refresh()
+{
+	for (auto& item : searchTrie.children)
+		Trie::Free(item.second);
+	searchTrie.isWordEnd = false;
+	searchTrie.children.clear();
+	fileNameToPath.clear();
+	searchResults.clear();
+	directoryTreeRoot = CreateDirectoryNodeTreeFromPath(directoryPath);
 }
 
 void DirectoryTreeView::RecursivelyAddDirectoryNodes(DirectoryTreeViewNode& parentNode, std::filesystem::directory_iterator directoryIterator)

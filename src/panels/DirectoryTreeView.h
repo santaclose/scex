@@ -58,6 +58,7 @@ private:
 	std::vector<std::string> searchResults;
 	std::unordered_map<std::string, std::vector<std::string>> fileNameToPath;
 
+	void Refresh();
 	void RecursivelyAddDirectoryNodes(DirectoryTreeViewNode& parentNode, std::filesystem::directory_iterator directoryIterator);
 	DirectoryTreeViewNode CreateDirectoryNodeTreeFromPath(const std::filesystem::path& rootPath);
 	void SetLastHoveredNode(const DirectoryTreeViewNode* node);
