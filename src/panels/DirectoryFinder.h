@@ -7,6 +7,7 @@
 #include <mutex>
 
 #define INPUT_BUFFER_SIZE 256
+#define MAX_PATH_LENGTH 512
 
 struct DirectoryFinderSearchResult
 {
@@ -43,7 +44,7 @@ private:
 	int createdFromFolderView = -1;
 
 	std::string panelName = "Folder search";
-	std::string directoryPath;
+	char directoryPath[MAX_PATH_LENGTH] = "\0";
 	bool regexEnabled = true;
 	bool caseSensitiveEnabled = true;
 	char toFind[INPUT_BUFFER_SIZE];

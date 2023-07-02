@@ -21,7 +21,8 @@ DirectoryFinder::DirectoryFinder(const std::string& folderPath,
 	this->onSearchFinishedCallback = onSearchFinishedCallback;
 	this->onFocusedCallback = onFocusedCallback;
 	panelName = "Folder search##" + std::to_string((int)this);
-	directoryPath = folderPath;
+	strcpy(directoryPath, folderPath.c_str());
+	directoryPath[folderPath.length()] = '\0';
 	toInclude[0] = toExclude[0] = toFind[0] = '\0';
 }
 
@@ -33,7 +34,7 @@ bool DirectoryFinder::OnImGui()
 		if (ImGui::IsWindowFocused() && onFocusedCallback != nullptr)
 			onFocusedCallback(this->createdFromFolderView);
 
-		ImGui::Text(directoryPath.c_str());
+		ImGui::InputText("Folder", directoryPath, MAX_PATH_LENGTH);
 		ImGui::Checkbox(".*", &regexEnabled);
 		ImGui::Checkbox("Aa", &caseSensitiveEnabled);
 		ImGui::InputText("To find", toFind, INPUT_BUFFER_SIZE);
