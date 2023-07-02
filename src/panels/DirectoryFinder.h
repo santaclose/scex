@@ -5,6 +5,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <boost/regex.hpp>
 
 #define INPUT_BUFFER_SIZE 256
 #define MAX_PATH_LENGTH 512
@@ -47,9 +48,11 @@ private:
 	char directoryPath[MAX_PATH_LENGTH] = "\0";
 	bool regexEnabled = true;
 	bool caseSensitiveEnabled = true;
-	char toFind[INPUT_BUFFER_SIZE];
-	char toInclude[INPUT_BUFFER_SIZE];
-	char toExclude[INPUT_BUFFER_SIZE];
+	char toFind[INPUT_BUFFER_SIZE] = "\0";
+	char toInclude[INPUT_BUFFER_SIZE] = "\0";
+	char toExclude[INPUT_BUFFER_SIZE] = "\0";
+	char resultFilter[INPUT_BUFFER_SIZE] = "\0";
+	boost::regex resultFilterRegex;
 
 	std::vector<DirectoryFinderSearchResultFile> resultFiles;
 

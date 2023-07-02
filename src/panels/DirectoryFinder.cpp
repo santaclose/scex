@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <iostream>
 #include <fstream>
-#include <boost/regex.hpp>
 
 #include <Utils.h>
 
@@ -23,7 +22,6 @@ DirectoryFinder::DirectoryFinder(const std::string& folderPath,
 	panelName = "Folder search##" + std::to_string((int)this);
 	strcpy(directoryPath, folderPath.c_str());
 	directoryPath[folderPath.length()] = '\0';
-	toInclude[0] = toExclude[0] = toFind[0] = '\0';
 }
 
 bool DirectoryFinder::OnImGui()
@@ -40,6 +38,8 @@ bool DirectoryFinder::OnImGui()
 		ImGui::InputText("To find", toFind, INPUT_BUFFER_SIZE);
 		ImGui::InputText("To include", toInclude, INPUT_BUFFER_SIZE);
 		ImGui::InputText("To exclude", toExclude, INPUT_BUFFER_SIZE);
+		if (ImGui::InputText("Result filter", resultFilter, INPUT_BUFFER_SIZE) && resultFilter[0] != '\0')
+			resultFilterRegex = boost::regex(resultFilter);
 		if (finderThread == nullptr)
 		{
 			if (ImGui::Button("Find"))
@@ -61,6 +61,9 @@ bool DirectoryFinder::OnImGui()
 				for (int j = 0; j < file.results.size(); j++)
 				{
 					DirectoryFinderSearchResult& res = file.results[j];
+					boost::smatch resultFilterMatch;
+					if (resultFilter[0] != '\0' && !boost::regex_match(res.displayText, resultFilterMatch, resultFilterRegex))
+						continue;
 					if (ImGui::Selectable(res.displayText.c_str()) && onResultClickCallback != nullptr)
 						onResultClickCallback(file.filePath, res, createdFromFolderView);
 				}
