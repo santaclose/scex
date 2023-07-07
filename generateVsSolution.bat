@@ -10,3 +10,4 @@ IF %ERRORLEVEL% NEQ 0 (
 ) else (
 	premake5 vs2022
 )
+pause
