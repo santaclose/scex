@@ -86,9 +86,12 @@ bool FileTextEdit::OnImGui()
 		}
 		if (ImGui::BeginMenu("Edit"))
 		{
-			bool ro = editor->IsReadOnly();
-			if (ImGui::MenuItem("Read-only mode", nullptr, &ro))
-				editor->SetReadOnly(ro);
+			bool ro = editor->IsReadOnlyEnabled();
+			if (ImGui::MenuItem("Read only mode enabled", nullptr, &ro))
+				editor->SetReadOnlyEnabled(ro);
+			bool ai = editor->IsAutoIndentEnabled();
+			if (ImGui::MenuItem("Auto indent on enter enabled", nullptr, &ai))
+				editor->SetAutoIndentEnabled(ai);
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Undo", "ALT-Backspace", nullptr, !ro && editor->CanUndo()))
