@@ -101,11 +101,11 @@ bool FileTextEdit::OnImGui()
 
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Copy", "Ctrl+C", nullptr, editor->HasSelection()))
+			if (ImGui::MenuItem("Copy", "Ctrl+C", nullptr, editor->AnyCursorHasSelection()))
 				editor->Copy();
-			if (ImGui::MenuItem("Cut", "Ctrl+X", nullptr, !ro && editor->HasSelection()))
+			if (ImGui::MenuItem("Cut", "Ctrl+X", nullptr, !ro && editor->AnyCursorHasSelection()))
 				editor->Cut();
-			if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor->HasSelection()))
+			if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor->AnyCursorHasSelection()))
 				editor->Delete();
 			if (ImGui::MenuItem("Paste", "Ctrl+V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
 				editor->Paste();
