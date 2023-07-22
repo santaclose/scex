@@ -3,7 +3,7 @@
 	url = git@github.com:santaclose/imgui.git
 [submodule "vendor/glfw"]
 	path = vendor/glfw
-	url = https://github.com/TheCherno/glfw.git
+	url = git@github.com:santaclose/glfw.git
 [submodule "vendor/ImGuiColorTextEdit"]
 	path = vendor/ImGuiColorTextEdit
 	url = git@github.com:santaclose/ImGuiColorTextEdit.git
