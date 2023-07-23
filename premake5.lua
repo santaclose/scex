@@ -39,7 +39,8 @@ project "ste"
 		"src/**.cpp",
 		"vendor/ImGuiColorTextEdit/*.cpp",
 		"vendor/ImGuiColorTextEdit/vendor/regex/src/**.cpp",
-		"vendor/load.cpp"
+		"vendor/load.cpp",
+		"vendor/imgui_test_engine/imgui_test_engine/*.cpp"
 	}
 
 	defines
@@ -57,7 +58,8 @@ project "ste"
 		"vendor/ImGuiColorTextEdit/vendor/regex/include",
 		"vendor/json",
 		"vendor/portable-file-dialogs",
-		"vendor/stb"
+		"vendor/stb",
+		"vendor/imgui_test_engine/imgui_test_engine"
 	}
 
 	links 

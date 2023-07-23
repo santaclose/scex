@@ -19,12 +19,18 @@
 #include <Utils.h>
 #include <PathUtils.h>
 
+#include <imgui_te_engine.h>
+#include <imgui_te_ui.h>
+
 namespace ste::ImGuiController
 {
 	int folderViewForLastFocusedPanel = -1;
 
 	ImGuiID leftDockID = -1;
 	ImGuiID rightDockID = -1;
+
+	ImGuiTestEngine* engine;
+	ImGuiTestEngineIO* test_io;
 
 	// ---- Callback declarations ---- //
 	void OnFolderShow(const std::string& folderPath, int folderViewId);
@@ -37,6 +43,8 @@ namespace ste::ImGuiController
 
 	bool menuBarEnabled = true;
 	bool textEditDebugInfo = false;
+	bool testEngineUiEnabled = false;
+	bool consoleEnabled = false;
 
 	std::unordered_map<std::string, FileTextEdit*> fileToEditorMap;
 	FileTextEdit* editorToFocus = nullptr;
@@ -158,6 +166,21 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	ImGui::StyleColorsDark();
 	io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
 	io.IniFilename = nullptr;
+
+	// Initialize Test Engine
+	engine = ImGuiTestEngine_CreateContext();
+	test_io = &ImGuiTestEngine_GetIO(engine);
+	test_io->ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
+	test_io->ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
+
+	// Register your Tests
+	RegisterTestEngineTests(engine); // will call IM_REGISTER_TEST() etc.
+
+	// Start test engine
+	ImGuiTestEngine_Start(engine, ImGui::GetCurrentContext());
+
+	// Optional: use default crash handler. You may use your own crash handler and call ImGuiTestEngine_CrashHandler() from it.
+	ImGuiTestEngine_InstallDefaultCrashHandler();
 }
 
 void ste::ImGuiController::Setup(GLFWwindow* window, const std::string& fileToOpen)
@@ -218,6 +241,8 @@ void ste::ImGuiController::Tick()
 						fte->SetShowDebugPanel(textEditDebugInfo);
 					}
 				}
+				ImGui::MenuItem("Test engine panel", NULL, &testEngineUiEnabled);
+				ImGui::MenuItem("Console enabled", NULL, &consoleEnabled);
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
@@ -303,6 +328,12 @@ void ste::ImGuiController::Tick()
 		}
 	}
 
+	// Optionally: show test engine UI to browse/run test from the UI
+	if (testEngineUiEnabled)
+		ImGuiTestEngine_ShowTestEngineWindows(engine, NULL);
+	if (consoleEnabled)
+		ShowConsole();
+
 	// Render dear imgui into screen
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -313,4 +344,7 @@ void ste::ImGuiController::Tick()
 		ImGui::RenderPlatformWindowsDefault();
 		glfwMakeContextCurrent(backup_current_context);
 	}
+
+	// Call after your rendering. This is mostly to support screen/video capturing features.
+	ImGuiTestEngine_PostSwap(engine);
 }
