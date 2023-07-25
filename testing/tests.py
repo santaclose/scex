@@ -1,14 +1,17 @@
 import os
+import sys
 import time
 import signal
 import string
 import random
+import pynput
 import pyperclip
 import pyautogui
 import subprocess
 import pydirectinput
 
 HOTKEY_INTERVAL = 0.06
+pkb = pynput.keyboard.Controller()
 
 loremIpsum = """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
 aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
@@ -30,7 +33,10 @@ def generateRandomText():
 
 
 os.chdir("..")
-p = subprocess.Popen(["bin/Release-windows-x86_64/ste/ste.exe"], stdout=subprocess.DEVNULL)
+if "nolaunch" in sys.argv:
+	waitAndClickOnImage("testing/find_window.png")
+else:
+	p = subprocess.Popen(["bin/Release-windows-x86_64/ste/ste.exe"], stdout=subprocess.DEVNULL)
 
 try:
 	time.sleep(0.5)
@@ -133,8 +139,10 @@ try:
 	pyautogui.keyDown('ctrl')
 	waitAndClickOnImage("testing/lalulalila.png", clicks=1)
 	pyautogui.keyUp('ctrl')
-	pyautogui.press('delete')
-	pyautogui.press('delete')
+	pkb.press(pynput.keyboard.Key.delete)
+	pkb.release(pynput.keyboard.Key.delete)
+	pkb.press(pynput.keyboard.Key.delete)
+	pkb.release(pynput.keyboard.Key.delete)
 	pyautogui.hotkey("ctrl", "a", interval=HOTKEY_INTERVAL)
 	pyautogui.hotkey("ctrl", "c", interval=HOTKEY_INTERVAL)
 	assert(pyperclip.paste() == "a\nbabubibabubaalulila")
