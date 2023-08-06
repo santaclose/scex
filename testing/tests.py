@@ -254,6 +254,17 @@ try:
 	assert(getClipText() == "asdf fdsa\nasdf fdsa\nasdf fdsa\nasdf fdsa")
 	print("Multicursor ctrl shift k test passed")
 
+	setClipText("alsdkj flkaj sdlf\ndfssfd lalulalila\nalksd flkajs dlfk\nbabubibabuba\nalksd flkasjd fal")
+	keyCombo(["ctrl", "v"])
+	waitAndClickOnImage("testing/babubibabuba.png", clicks=1)
+	keyDown('shift')
+	waitAndClickOnImage("testing/lalulalila.png", clicks=1)
+	keyUp('shift')
+	keyCombo(["ctrl", "shift", "k"])
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "alsdkj flkaj sdlf\nalksd flkasjd fal")
+	print("Ctrl shift k with multiline selection test passed")
 # 	breakpoint()
 
 except Exception as e:
