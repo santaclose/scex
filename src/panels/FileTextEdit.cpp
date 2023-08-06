@@ -296,8 +296,7 @@ void FileTextEdit::OnSaveCommand()
 		associatedFile = destination;
 		hasAssociatedFile = true;
 		panelName = std::filesystem::path(destination).filename().string() + "##" + std::to_string((int)this);
-		std::ofstream outFile;
-		outFile.open(Utils::Utf8ToWstring(destination));
+		std::ofstream outFile(Utils::Utf8ToWstring(destination), std::ios::binary);
 		outFile << textToSave;
 		outFile.close();
 	}
