@@ -201,7 +201,7 @@ try:
 	keyCombo(["ctrl", "c"])
 	assert(getClipText() == "babubibabuba babubibabuba\nbabubibabuba babubibabuba\nbabubibabuba babubibabuba")
 	print("Ctrl d and multicursor copy paste test passed")
-	
+
 	waitAndClickOnImage("testing/babubibabuba.png", clicks=2)
 	keyPress("right")
 	keyCombo(["ctrl", "delete"])
@@ -235,6 +235,24 @@ try:
 	keyCombo(["ctrl", "c"])
 	assert(getClipText() == " babubibabuba\n a bubibabuba")
 	print("Word mode move and delete test passed")
+
+	setClipText("asdf fdsa\nasdf fdsa\nbabubibabuba lalulalila\nasdf fdsa\nasdf fdsa")
+	keyCombo(["ctrl", "v"])
+	waitAndClickOnImage("testing/babubibabuba.png", clicks=1)
+	keyCombo(["ctrl", "shift", "k"])
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "asdf fdsa\nasdf fdsa\nasdf fdsa\nasdf fdsa")
+	keyCombo(["ctrl", "z"])
+	waitAndClickOnImage("testing/babubibabuba.png", clicks=1)
+	keyDown('ctrl')
+	waitAndClickOnImage("testing/lalulalila.png", clicks=1)
+	keyUp('ctrl')
+	keyCombo(["ctrl", "shift", "k"])
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "asdf fdsa\nasdf fdsa\nasdf fdsa\nasdf fdsa")
+	print("Multicursor ctrl shift k test passed")
 
 # 	breakpoint()
 
