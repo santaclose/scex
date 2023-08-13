@@ -1,6 +1,7 @@
 #include "DirectoryTreeView.h"
 
 #include <iostream>
+#include <algorithm>
 
 #define MAX_SEARCH_RESULTS 50
 
@@ -13,7 +14,7 @@ DirectoryTreeView::DirectoryTreeView(
 	int id)
 {
 	this->id = id;
-	panelName = "Folder view##" + std::to_string((int)this);
+	panelName = "Folder view##" + std::to_string((long)this);
 	directoryPath = folderPath;
 	this->fileClickCallback = fileClickCallback;
 	this->onFocusedCallback = onFocusedCallback;

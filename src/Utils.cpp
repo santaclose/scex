@@ -1,5 +1,6 @@
 #include "Utils.h"
 
+#include <locale>
 #include <codecvt>
 
 #include <stb_image.h>

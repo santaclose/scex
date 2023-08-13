@@ -19,7 +19,7 @@ DirectoryFinder::DirectoryFinder(const std::string& folderPath,
 	this->onResultFoundCallback = onResultFoundCallback;
 	this->onSearchFinishedCallback = onSearchFinishedCallback;
 	this->onFocusedCallback = onFocusedCallback;
-	panelName = "Folder search##" + std::to_string((int)this);
+	panelName = "Folder search##" + std::to_string((long)this);
 	strcpy(directoryPath, folderPath.c_str());
 	directoryPath[folderPath.length()] = '\0';
 }
@@ -107,7 +107,7 @@ void DirectoryFinder::Find()
 		resultFiles.clear();
 	}
 	bool foundInFile = false;
-	for (std::filesystem::recursive_directory_iterator i(Utils::Utf8ToWstring(directoryPath)), end; i != end; ++i)
+	for (std::filesystem::recursive_directory_iterator i(directoryPath), end; i != end; ++i)
 	{
 		if (finderThread == nullptr)
 			break;
@@ -126,7 +126,7 @@ void DirectoryFinder::Find()
 			continue;
 
 		std::ifstream fileInput;
-		fileInput.open(Utils::Utf8ToWstring(filePath));
+		fileInput.open(filePath);
 		std::string line;
 		int curLine = 0;
 		while (std::getline(fileInput, line))

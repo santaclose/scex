@@ -120,18 +120,26 @@ int main(int argc, char** argv)
 		std::cout << "[Renderer] Failed to initialize OpenGL context (GLAD)" << std::endl;
 		return false;
 	}
+	int openglMajor, openglMinor;
+	glGetIntegerv(GL_MAJOR_VERSION, &openglMajor);
+	glGetIntegerv(GL_MINOR_VERSION, &openglMinor);
+	std::cout << "OpenGL version: " << openglMajor << '.' << openglMinor << std::endl;
+	float openglVersionFloat = openglMajor + (openglMinor / 10.0f);
+
 	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
 #ifdef STE_DEBUG
 	int flags;
 	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
+	if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) && openglVersionFloat > 4.2)
 	{
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(glDebugOutput, nullptr);
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 	}
+	else
+		std::cout << "Skipping OpenGL debug hook, version older than 4.3\n";
 #endif
 
 	/* Loop until the user closes the window */

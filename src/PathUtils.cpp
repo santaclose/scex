@@ -1,7 +1,8 @@
-#include "pathUtils.h"
+#include "PathUtils.h"
 
 #include <filesystem>
 #include <iostream>
+#include <vector>
 
 namespace PathUtils
 {
@@ -16,12 +17,7 @@ void PathUtils::SetProgramDirectory(const std::string& executableFilePath)
 	if (!std::filesystem::exists(assetsDirectory))
 	{
 		// asset directory is different when launching from visual studio
-		std::string parent = programDirectory;
-		parent = GetFolderPath(parent.substr(0, parent.length() - 1));
-		parent = GetFolderPath(parent.substr(0, parent.length() - 1));
-		parent = GetFolderPath(parent.substr(0, parent.length() - 1));
-
-		assetsDirectory = parent + "assets/";
+		assetsDirectory = programDirectory + "../../../assets/";
 	}
 	if (!std::filesystem::exists(assetsDirectory))
 		std::cout << "[Path utils] Warning, could not locate assets folder\n";

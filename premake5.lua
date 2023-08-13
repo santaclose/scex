@@ -17,7 +17,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Projects
 group "Dependencies"
-	include "vendor/GLFW"
+	include "vendor/glfw"
 	include "vendor/Glad"
 	include "vendor/imgui"
 
@@ -44,13 +44,14 @@ project "ste"
 
 	defines
 	{
-		"_CRT_SECURE_NO_WARNINGS"
+		"_CRT_SECURE_NO_WARNINGS",
+		"GLFW_INCLUDE_NONE"
 	}
 
 	includedirs
 	{
 		"src",
-		"vendor/GLFW/include",
+		"vendor/glfw/include",
 		"vendor/Glad/include",
 		"vendor/imgui",
 		"vendor/ImGuiColorTextEdit",
@@ -62,29 +63,28 @@ project "ste"
 
 	links 
 	{ 
-		"GLFW",
+		"glfw",
 		"Glad",
-		"ImGui",
-		"opengl32.lib"
+		"ImGui"
 	}
 
 	filter "system:windows"
 		systemversion "latest"
+		defines { "STE_PLATFORM_WINDOWS" }
+		buildoptions { "/openmp" }
+		links { "opengl32.lib" }
 
-		defines
-		{
-			"STE_PLATFORM_WINDOWS",
-			"GLFW_INCLUDE_NONE"
-		}
+	filter "system:Unix"
+		systemversion "latest"
+		defines { "STE_PLATFORM_LINUX" }
+		links { "GL" }
 
 	filter "configurations:Debug"
 		defines "STE_DEBUG"
 		runtime "Debug"
 		symbols "on"
-		buildoptions { "/openmp" }
 
 	filter "configurations:Release"
 		defines "STE_RELEASE"
 		runtime "Release"
 		optimize "on"
-		buildoptions { "/openmp" }
