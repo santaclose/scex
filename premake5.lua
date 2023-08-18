@@ -57,7 +57,8 @@ project "ste"
 		"vendor/ImGuiColorTextEdit/vendor/regex/include",
 		"vendor/json",
 		"vendor/portable-file-dialogs",
-		"vendor/stb"
+		"vendor/stb",
+		"vendor/cpp-subprocess"
 	}
 
 	links 

@@ -27,9 +27,9 @@ namespace ste::ImGuiController
 	ImGuiID rightDockID = -1;
 
 	// ---- Callback declarations ---- //
-	void OnFolderShow(const std::string& folderPath, int folderViewId);
+	void OnFolderOpenInFileExplorer(const std::string& folderPath, int folderViewId);
 	void OnFindInFolder(const std::string& folderPath, int folderViewId);
-	void OnFileShowInFolder(const std::string& filePath, int folderViewId);
+	void OnShowInFileExplorer(const std::string& filePath, int folderViewId);
 	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId);
 	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult, int folderViewId);
 	void OnFolderSearchResultFoundOrSearchFinished();
@@ -45,8 +45,14 @@ namespace ste::ImGuiController
 	std::vector<DirectoryTreeView*> folderViewers;
 	std::vector<FileTextEdit*> fileTextEdits;
 
-	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFileContextMenuOptions = { {"Show in folder", OnFileShowInFolder} };
-	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFolderContextMenuOptions = { {"Show", OnFolderShow}, {"Find in folder", OnFindInFolder} };
+	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFileContextMenuOptions = {
+		{"Show in file explorer", OnShowInFileExplorer}
+	};
+	std::vector<std::pair<std::string, DirectoryTreeView::OnContextMenuCallback>> folderViewFolderContextMenuOptions = {
+		{"Find in folder", OnFindInFolder},
+		{"Show in file explorer", OnShowInFileExplorer},
+		{"Open in file explorer", OnFolderOpenInFileExplorer}
+	};
 
 	FileTextEdit* CreateNewEditor(const char* filePath = nullptr, int fromFolderView = -1)
 	{
@@ -75,23 +81,21 @@ namespace ste::ImGuiController
 	}
 
 	// ---- Callbacks from folder view ---- //
-	void OnFolderShow(const std::string& folderPath, int folderViewId)
+	void OnFolderOpenInFileExplorer(const std::string& folderPath, int folderViewId)
 	{
 		// doesn't work with non ASCII
-		std::string command = "explorer \"" + folderPath + "\"";
-		system(command.c_str());
+		Utils::SubprocessCall({ "explorer", folderPath });
 	}
 	void OnFindInFolder(const std::string& folderPath, int folderViewId)
 	{
 		CreateNewFolderSearch(folderPath, folderViewId);
 	}
-	void OnFileShowInFolder(const std::string& filePath, int folderViewId)
+	void OnShowInFileExplorer(const std::string& filePath, int folderViewId)
 	{
 		auto path = std::filesystem::path(filePath);
-		std::string parentFolderPath = path.parent_path().u8string();
 		// doesn't work with non ASCII
-		std::string command = "explorer /select,\"" + path.u8string() + "\",\"" + parentFolderPath + "\"";
-		system(command.c_str());
+		std::string command = "explorer /select,\"" + path.u8string() + '\"';
+		Utils::SubprocessCall(command);
 	}
 	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId)
 	{

@@ -7,3 +7,6 @@
 [submodule "vendor/ImGuiColorTextEdit"]
 	path = vendor/ImGuiColorTextEdit
 	url = git@github.com:santaclose/ImGuiColorTextEdit.git
+[submodule "vendor/cpp-subprocess"]
+	path = vendor/cpp-subprocess
+	url = git@github.com:santaclose/cpp-subprocess.git
