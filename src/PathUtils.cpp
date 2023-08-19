@@ -3,6 +3,12 @@
 #include <filesystem>
 #include <iostream>
 
+#ifdef STE_PLATFORM_WINDOWS
+#define PATH_SEP '\\'
+#else
+#define PATH_SEP '/'
+#endif
+
 namespace PathUtils
 {
 	std::string programDirectory;
@@ -12,16 +18,12 @@ namespace PathUtils
 void PathUtils::SetProgramDirectory(const std::string& executableFilePath)
 {
 	programDirectory = GetFolderPath(executableFilePath);
-	assetsDirectory = programDirectory + "assets/";
+	assetsDirectory = programDirectory + "assets" + PATH_SEP;
 	if (!std::filesystem::exists(assetsDirectory))
 	{
 		// asset directory is different when launching from visual studio
-		std::string parent = programDirectory;
-		parent = GetFolderPath(parent.substr(0, parent.length() - 1));
-		parent = GetFolderPath(parent.substr(0, parent.length() - 1));
-		parent = GetFolderPath(parent.substr(0, parent.length() - 1));
-
-		assetsDirectory = parent + "assets/";
+		std::cout << "[Path utils] Adjusting assets directory\n";
+		assetsDirectory = programDirectory + ".." + PATH_SEP + ".." + PATH_SEP + ".." + PATH_SEP + "assets" + PATH_SEP;
 	}
 	if (!std::filesystem::exists(assetsDirectory))
 		std::cout << "[Path utils] Warning, could not locate assets folder\n";
