@@ -120,14 +120,6 @@ bool FileTextEdit::OnImGui()
 
 		if (ImGui::BeginMenu("View"))
 		{
-			if (ImGui::MenuItem("Mariana palette"))
-				editor->SetPalette(TextEditor::GetMarianaPalette());
-			if (ImGui::MenuItem("Dark palette"))
-				editor->SetPalette(TextEditor::GetDarkPalette());
-			if (ImGui::MenuItem("Light palette"))
-				editor->SetPalette(TextEditor::GetLightPalette());
-			if (ImGui::MenuItem("Retro blue palette"))
-				editor->SetPalette(TextEditor::GetRetroBluePalette());
 			ImGui::SliderInt("Tab size", &tabSize, 1, 8);
 			editor->SetTabSize(tabSize);
 			static bool showSpaces = editor->IsShowingWhitespaces();
@@ -155,10 +147,20 @@ bool FileTextEdit::OnImGui()
 					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
 				if (ImGui::MenuItem("HLSL"))
 					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::HLSL());
-					
 				ImGui::EndMenu();
 			}
-
+			if (ImGui::BeginMenu("Color scheme"))
+			{
+				if (ImGui::MenuItem("Dark palette"))
+					editor->SetPalette(TextEditor::GetDarkPalette());
+				if (ImGui::MenuItem("Mariana palette"))
+					editor->SetPalette(TextEditor::GetMarianaPalette());
+				if (ImGui::MenuItem("Light palette"))
+					editor->SetPalette(TextEditor::GetLightPalette());
+				if (ImGui::MenuItem("Retro blue palette"))
+					editor->SetPalette(TextEditor::GetRetroBluePalette());
+				ImGui::EndMenu();
+			}
 			ImGui::EndMenu();
 		}
 
