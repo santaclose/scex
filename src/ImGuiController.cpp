@@ -159,7 +159,10 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 		std::cout << "Config file not found, using default values\n";
 
 	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
+	if (glfwIsWindowLightTheme(window))
+		ImGui::StyleColorsLight();
+	else
+		ImGui::StyleColorsDark();
 	io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
 	io.IniFilename = nullptr;
 }
