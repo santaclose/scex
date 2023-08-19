@@ -14,7 +14,6 @@
 #endif
 
 #define REDRAW_COUNT 5
-#define BACKGROUND_COLOR 0.1
 
 #ifdef STE_DEBUG
 void APIENTRY glDebugOutput(GLenum source,
@@ -120,7 +119,6 @@ int main(int argc, char** argv)
 		std::cout << "[Renderer] Failed to initialize OpenGL context (GLAD)" << std::endl;
 		return false;
 	}
-	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
 #ifdef STE_DEBUG
 	int flags;
