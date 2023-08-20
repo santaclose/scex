@@ -1,6 +1,6 @@
-workspace "ste"
+workspace "scex"
 	architecture "x64"
-	startproject "ste"
+	startproject "scex"
 
 	configurations
 	{
@@ -23,7 +23,7 @@ group "Dependencies"
 
 group ""
 
-project "ste"
+project "scex"
 	kind "WindowedApp"
 	language "C++"
 	cppdialect "C++17"
@@ -74,18 +74,18 @@ project "ste"
 
 		defines
 		{
-			"STE_PLATFORM_WINDOWS",
+			"SCEX_PLATFORM_WINDOWS",
 			"GLFW_INCLUDE_NONE"
 		}
 
 	filter "configurations:Debug"
-		defines "STE_DEBUG"
+		defines "SCEX_DEBUG"
 		runtime "Debug"
 		symbols "on"
 		buildoptions { "/openmp" }
 
 	filter "configurations:Release"
-		defines "STE_RELEASE"
+		defines "SCEX_RELEASE"
 		runtime "Release"
 		optimize "on"
 		buildoptions { "/openmp" }

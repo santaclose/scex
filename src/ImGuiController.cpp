@@ -206,7 +206,7 @@ void ste::ImGuiController::Tick()
 	{
 		if (ImGui::BeginMainMenuBar())
 		{
-			if (ImGui::BeginMenu("ste"))
+			if (ImGui::BeginMenu("scex"))
 			{
 				newTextPanelRequested |= ImGui::MenuItem("New text panel", "Ctrl+N");
 				openFileRequested |= ImGui::MenuItem("Open file", "Ctrl+O");

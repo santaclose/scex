@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <iostream>
 
-#ifdef STE_PLATFORM_WINDOWS
+#ifdef SCEX_PLATFORM_WINDOWS
 #define PATH_SEP '\\'
 #else
 #define PATH_SEP '/'

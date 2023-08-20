@@ -8,14 +8,14 @@
 #include <PathUtils.h>
 #include <ImGuiController.h>
 
-#ifdef STE_PLATFORM_WINDOWS
+#ifdef SCEX_PLATFORM_WINDOWS
 #include <windows.h>
 #include <atlstr.h>
 #endif
 
 #define REDRAW_COUNT 5
 
-#ifdef STE_DEBUG
+#ifdef SCEX_DEBUG
 void APIENTRY glDebugOutput(GLenum source,
 	GLenum type,
 	uint32_t id,
@@ -64,7 +64,7 @@ void APIENTRY glDebugOutput(GLenum source,
 }
 #endif
 
-#ifdef STE_PLATFORM_WINDOWS
+#ifdef SCEX_PLATFORM_WINDOWS
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
 	LPWSTR* szArglist;
@@ -91,11 +91,11 @@ int main(int argc, char** argv)
 	if (!glfwInit())
 		return -1;
 
-#ifdef STE_DEBUG
+#ifdef SCEX_DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 #endif
 
-	window = glfwCreateWindow(argc > 1 ? 720 : 1280, 720, "ste", NULL, NULL);
+	window = glfwCreateWindow(argc > 1 ? 720 : 1280, 720, "scex", NULL, NULL);
 
 	if (!window)
 	{
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
 		return false;
 	}
 
-#ifdef STE_DEBUG
+#ifdef SCEX_DEBUG
 	int flags;
 	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
 	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
