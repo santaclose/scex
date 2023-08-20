@@ -32,11 +32,15 @@ struct DirectoryTreeView
 		std::vector<std::pair<std::string, OnContextMenuCallback>>* folderContextMenuOptions = nullptr,
 		int id = -1);
 	~DirectoryTreeView();
-	bool OnImGui();
+	bool OnImGui(double deltaTime);
 	void RunSearch();
+	void ShowFile(const std::string& filePath);
 
 private:
 	int id = -1;
+
+	std::string fileToHighlight = "";
+	float selectionTimer = -1.0f;
 
 	bool requestingFocus = false;
 	bool searching = false;

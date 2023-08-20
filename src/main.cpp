@@ -137,13 +137,21 @@ int main(int argc, char** argv)
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 	}
 #endif
-
+	float programTime = 0.0;
+	double lastFrameTime = 0.0;
+	double currentFrameTime = 0.0;
+	double deltaTime = 0.0;
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
+		currentFrameTime = glfwGetTime();
+		deltaTime = currentFrameTime - lastFrameTime;
+
 		/* Draw scene */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		scex::ImGuiController::Tick();
+		scex::ImGuiController::Tick(deltaTime);
+
+		programTime += deltaTime;
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
@@ -157,6 +165,7 @@ int main(int argc, char** argv)
 		else
 			redrawCounter--;
 		glfwPollEvents();
+		lastFrameTime = currentFrameTime;
 	}
 
 	glfwTerminate();

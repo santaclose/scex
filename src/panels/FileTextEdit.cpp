@@ -24,11 +24,12 @@ std::unordered_map<std::string, const TextEditor::LanguageDefinition*> FileTextE
 	{".json",&TextEditor::LanguageDefinition::Json()}
 };
 
-FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFocusedCallback onFocusedCallback)
+FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFocusedCallback onFocusedCallback, OnShowInFolderViewCallback onShowInFolderViewCallback)
 {
 	this->id = id;
 	this->createdFromFolderView = createdFromFolderView;
 	this->onFocusedCallback = onFocusedCallback;
+	this->onShowInFolderViewCallback = onShowInFolderViewCallback;
 	editor = new TextEditor();
 	if (filePath == nullptr)
 		panelName = "untitled##" + std::to_string((int)this);
@@ -84,6 +85,10 @@ bool FileTextEdit::OnImGui()
 				OnSaveCommand();
 			if (this->hasAssociatedFile && ImGui::MenuItem("Show in file explorer"))
 				Utils::ShowInFileExplorer(this->associatedFile);
+			if (this->hasAssociatedFile &&
+				this->onShowInFolderViewCallback != nullptr &&
+				this->createdFromFolderView > -1 && ImGui::MenuItem("Show in folder view"))
+				this->onShowInFolderViewCallback(this->associatedFile, this->createdFromFolderView);;
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit"))
@@ -252,6 +257,12 @@ const char* FileTextEdit::GetAssociatedFile()
 	if (!hasAssociatedFile)
 		return nullptr;
 	return associatedFile.c_str();
+}
+
+void FileTextEdit::OnFolderViewDeleted(int folderViewId)
+{
+	if (createdFromFolderView == folderViewId)
+		createdFromFolderView = -1;
 }
 
 void FileTextEdit::SetShowDebugPanel(bool value)

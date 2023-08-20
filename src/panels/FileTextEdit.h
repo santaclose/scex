@@ -5,15 +5,18 @@
 struct FileTextEdit
 {
 	typedef void (*OnFocusedCallback)(int folderViewId);
+	typedef void (*OnShowInFolderViewCallback)(const std::string& filePath, int folderViewId);
 
 	FileTextEdit(const char* filePath = nullptr,
 		int id = -1,
 		int createdFromFolderView = -1,
-		OnFocusedCallback onFocusedCallback = nullptr);
+		OnFocusedCallback onFocusedCallback = nullptr,
+		OnShowInFolderViewCallback onShowInFolderViewCallback = nullptr);
 	~FileTextEdit();
 	bool OnImGui();
 	void SetSelection(int startLine, int startChar, int endLine, int endChar);
 	const char* GetAssociatedFile();
+	void OnFolderViewDeleted(int folderViewId);
 	void SetShowDebugPanel(bool value);
 
 private:
@@ -27,6 +30,7 @@ private:
 	int createdFromFolderView = -1;
 
 	OnFocusedCallback onFocusedCallback = nullptr;
+	OnShowInFolderViewCallback onShowInFolderViewCallback = nullptr;
 
 	TextEditor* editor = nullptr;
 	bool showDebugPanel = false;

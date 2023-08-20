@@ -9,5 +9,5 @@ namespace scex::ImGuiController
 	void Setup(GLFWwindow* window, const std::string& fileToOpen);
 	bool HasControl();
 	void OnPathsDropped(const char** paths, int pathCount);
-	void Tick();
+	void Tick(double deltaTime);
 }

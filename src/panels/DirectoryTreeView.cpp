@@ -1,8 +1,10 @@
 #include "DirectoryTreeView.h"
 
 #include <iostream>
+#include <PathUtils.h>
 
 #define MAX_SEARCH_RESULTS 50
+#define SECONDS_TO_SELECT_ON_SHOW_FILE 2.0f
 
 DirectoryTreeView::DirectoryTreeView(
 	const std::string& folderPath,
@@ -29,7 +31,7 @@ DirectoryTreeView::~DirectoryTreeView()
 		Trie::Free(item.second);
 }
 
-bool DirectoryTreeView::OnImGui()
+bool DirectoryTreeView::OnImGui(double deltaTime)
 {
 	bool windowIsOpen = true;
 	if (requestingFocus)
@@ -88,6 +90,12 @@ bool DirectoryTreeView::OnImGui()
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.0f, 2.0f });
 		ImGui::SetNextItemOpen(true);
 		RecursivelyDisplayDirectoryNode(directoryTreeRoot);
+		if (selectionTimer > 0.0f)
+		{
+			selectionTimer -= deltaTime;
+			if (selectionTimer <= 0.0f)
+				fileToHighlight = "";
+		}
 		ImGui::PopStyleVar(2);
 
 		if (lastHoveredNode != nullptr)
@@ -126,6 +134,12 @@ void DirectoryTreeView::RunSearch()
 	requestingFocus = searching = true;
 	findFilesBuffer[0] = '\0';
 	searchResults.clear();
+}
+
+void DirectoryTreeView::ShowFile(const std::string& filePath)
+{
+	fileToHighlight = filePath;
+	selectionTimer = SECONDS_TO_SELECT_ON_SHOW_FILE;
 }
 
 void DirectoryTreeView::Refresh()
@@ -178,6 +192,12 @@ void DirectoryTreeView::SetLastHoveredNode(const DirectoryTreeViewNode* node)
 
 void DirectoryTreeView::RecursivelyDisplayDirectoryNode(const DirectoryTreeViewNode& parentNode)
 {
+	bool needToSelectNode = false;
+	if (fileToHighlight.length() > 0 && PathUtils::GetFolderPath(fileToHighlight).find(parentNode.fullPath) != std::string::npos) // show file in folder functionality
+		ImGui::SetNextItemOpen(true);
+	else if (fileToHighlight.compare(parentNode.fullPath) == 0)
+		needToSelectNode = true;
+
 	ImGui::PushID(&parentNode);
 	if (parentNode.isDirectory)
 	{
@@ -197,7 +217,9 @@ void DirectoryTreeView::RecursivelyDisplayDirectoryNode(const DirectoryTreeViewN
 	}
 	else
 	{
-		if (ImGui::TreeNodeEx(parentNode.fileName.c_str(), ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding))
+		if (ImGui::TreeNodeEx(parentNode.fileName.c_str(),
+			ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth |
+			ImGuiTreeNodeFlags_FramePadding | (needToSelectNode ? ImGuiTreeNodeFlags_Selected : 0x0)))
 		{
 			if (ImGui::IsItemClicked(0))
 			{

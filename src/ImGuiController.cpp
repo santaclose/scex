@@ -31,6 +31,7 @@ namespace scex::ImGuiController
 	void OnFindInFolder(const std::string& folderPath, int folderViewId);
 	void OnShowInFileExplorer(const std::string& filePath, int folderViewId);
 	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId);
+	void OnShowInFolderView(const std::string& filePath, int folderViewId);
 	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult, int folderViewId);
 	void OnFolderSearchResultFoundOrSearchFinished();
 	void OnPanelFocused(int folderViewId);
@@ -57,7 +58,7 @@ namespace scex::ImGuiController
 	FileTextEdit* CreateNewEditor(const char* filePath = nullptr, int fromFolderView = -1)
 	{
 		int fileTextEditId = fileTextEdits.size();
-		fileTextEdits.push_back(new FileTextEdit(filePath, fileTextEditId, fromFolderView, OnPanelFocused));
+		fileTextEdits.push_back(new FileTextEdit(filePath, fileTextEditId, fromFolderView, OnPanelFocused, OnShowInFolderView));
 		fileTextEdits.back()->SetShowDebugPanel(textEditDebugInfo);
 		return fileTextEdits.back();
 	}
@@ -101,7 +102,15 @@ namespace scex::ImGuiController
 			editorToFocus = fileToEditorMap[filePath];
 	}
 
-	// ---- Callback from folder finder ---- //
+	// ---- Callbacks from file text edit ---- //
+	void OnShowInFolderView(const std::string& filePath, int folderViewId)
+	{
+		assert(folderViewId > -1);
+		assert(folderViewers[folderViewId] != nullptr);
+		folderViewers[folderViewId]->ShowFile(filePath);
+	}
+
+	// ---- Callbacks from folder finder ---- //
 	void OnFolderSearchResultClick(const std::string& filePath, const DirectoryFinderSearchResult& searchResult, int folderViewId)
 	{
 		FileTextEdit* targetEditor;
@@ -187,7 +196,7 @@ void scex::ImGuiController::OnPathsDropped(const char** paths, int pathCount)
 	}
 }
 
-void scex::ImGuiController::Tick()
+void scex::ImGuiController::Tick(double deltaTime)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -266,13 +275,21 @@ void scex::ImGuiController::Tick()
 			if (folderView == nullptr)
 				continue;
 			ImGui::SetNextWindowDockID(leftDockID, ImGuiCond_FirstUseEver);
-			if (!folderView->OnImGui())
+			if (!folderView->OnImGui(deltaTime))
 				folderViewToDelete = i;
 		}
 		if (folderViewToDelete > -1)
 		{
 			delete folderViewers[folderViewToDelete];
 			folderViewers[folderViewToDelete] = nullptr;
+			// notify text editors so they don't try to show file in folder view
+			for (int i = 0; i < fileTextEdits.size(); i++)
+			{
+				FileTextEdit* fte = fileTextEdits[i];
+				if (fte == nullptr)
+					continue;
+				fte->OnFolderViewDeleted(folderViewToDelete);
+			}
 		}
 	}
 	{
