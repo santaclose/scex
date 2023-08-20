@@ -64,6 +64,11 @@ void APIENTRY glDebugOutput(GLenum source,
 }
 #endif
 
+void onDropCallback(GLFWwindow* window, int path_count, const char* paths[])
+{
+	scex::ImGuiController::OnPathsDropped(paths, path_count);
+}
+
 #ifdef SCEX_PLATFORM_WINDOWS
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
@@ -108,11 +113,12 @@ int main(int argc, char** argv)
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	glfwSetDropCallback(window, onDropCallback);
 
 	if (argc > 1)
-		ste::ImGuiController::Setup(window, secondArgument);
+		scex::ImGuiController::Setup(window, secondArgument);
 	else
-		ste::ImGuiController::Setup(window);
+		scex::ImGuiController::Setup(window);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -137,7 +143,7 @@ int main(int argc, char** argv)
 	{
 		/* Draw scene */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		ste::ImGuiController::Tick();
+		scex::ImGuiController::Tick();
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);

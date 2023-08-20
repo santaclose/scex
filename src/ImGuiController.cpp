@@ -19,7 +19,7 @@
 #include <Utils.h>
 #include <PathUtils.h>
 
-namespace ste::ImGuiController
+namespace scex::ImGuiController
 {
 	int folderViewForLastFocusedPanel = -1;
 
@@ -127,7 +127,7 @@ namespace ste::ImGuiController
 	}
 }
 
-void ste::ImGuiController::Setup(GLFWwindow* window)
+void scex::ImGuiController::Setup(GLFWwindow* window)
 {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -167,19 +167,31 @@ void ste::ImGuiController::Setup(GLFWwindow* window)
 	io.IniFilename = nullptr;
 }
 
-void ste::ImGuiController::Setup(GLFWwindow* window, const std::string& fileToOpen)
+void scex::ImGuiController::Setup(GLFWwindow* window, const std::string& fileToOpen)
 {
 	Setup(window);
 	fileToEditorMap[fileToOpen] = CreateNewEditor(fileToOpen.c_str());
 	menuBarEnabled = false;
 }
 
-bool ste::ImGuiController::HasControl()
+bool scex::ImGuiController::HasControl()
 {
 	return ImGui::GetIO().WantCaptureMouse;
 }
 
-void ste::ImGuiController::Tick()
+void scex::ImGuiController::OnPathsDropped(const char** paths, int pathCount)
+{
+	for (int i = 0; i < pathCount; i++)
+	{
+		std::filesystem::path pathObject(paths[i]);
+		if (std::filesystem::is_directory(pathObject))
+			CreateNewFolderViewer(paths[i]);
+		else
+			CreateNewEditor(paths[i]);
+	}
+}
+
+void scex::ImGuiController::Tick()
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
