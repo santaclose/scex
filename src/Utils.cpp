@@ -38,3 +38,16 @@ std::string Utils::SubprocessCheckOutput(const std::vector<std::string>& cmd)
 	memcpy(result.data(), out.buf.data(), result.size());
 	return result;
 }
+
+void Utils::ShowInFileExplorer(const std::string& path)
+{
+	// doesn't work with non ASCII
+	std::string command = "explorer /select,\"" + path + '\"';
+	Utils::SubprocessCall(command);
+}
+
+void Utils::OpenInFileExplorer(const std::string& folderPath)
+{
+	// doesn't work with non ASCII
+	Utils::SubprocessCall({ "explorer", folderPath });
+}

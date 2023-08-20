@@ -83,8 +83,7 @@ namespace scex::ImGuiController
 	// ---- Callbacks from folder view ---- //
 	void OnFolderOpenInFileExplorer(const std::string& folderPath, int folderViewId)
 	{
-		// doesn't work with non ASCII
-		Utils::SubprocessCall({ "explorer", folderPath });
+		Utils::OpenInFileExplorer(folderPath);
 	}
 	void OnFindInFolder(const std::string& folderPath, int folderViewId)
 	{
@@ -92,10 +91,7 @@ namespace scex::ImGuiController
 	}
 	void OnShowInFileExplorer(const std::string& filePath, int folderViewId)
 	{
-		auto path = std::filesystem::path(filePath);
-		// doesn't work with non ASCII
-		std::string command = "explorer /select,\"" + path.u8string() + '\"';
-		Utils::SubprocessCall(command);
+		Utils::ShowInFileExplorer(filePath);
 	}
 	void OnFileClickedInFolderView(const std::string& filePath, int folderViewId)
 	{

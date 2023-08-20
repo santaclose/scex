@@ -12,4 +12,7 @@ namespace Utils
 	int SubprocessCall(const std::string& cmd);
 	int SubprocessCall(const std::vector<std::string>& cmd);
 	std::string SubprocessCheckOutput(const std::vector<std::string>& cmd);
+
+	void ShowInFileExplorer(const std::string& path);
+	void OpenInFileExplorer(const std::string& folderPath);
 }

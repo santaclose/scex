@@ -82,6 +82,8 @@ bool FileTextEdit::OnImGui()
 				OnLoadFromCommand();
 			if (ImGui::MenuItem("Save", "Ctrl+S"))
 				OnSaveCommand();
+			if (this->hasAssociatedFile && ImGui::MenuItem("Show in file explorer"))
+				Utils::ShowInFileExplorer(this->associatedFile);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit"))
