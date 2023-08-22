@@ -62,7 +62,7 @@ os.chdir("..")
 if "nolaunch" in sys.argv:
 	waitAndClickOnImage("testing/find_window.png")
 else:
-	p = subprocess.Popen(["bin/Release-windows-x86_64/ste/ste.exe"], stdout=subprocess.DEVNULL)
+	p = subprocess.Popen(["bin/Release-windows-x86_64/scex/scex.exe"], stdout=subprocess.DEVNULL)
 
 try:
 	time.sleep(0.5)
@@ -265,6 +265,32 @@ try:
 	keyCombo(["ctrl", "c"])
 	assert(getClipText() == "alsdkj flkaj sdlf\nalksd flkasjd fal")
 	print("Ctrl shift k with multiline selection test passed")
+
+	setClipText(" \t\n  \t\n   \t\n    \t")
+	keyCombo(["ctrl", "v"])
+	keyCombo(["ctrl", "end"])
+	keyCombo(["shift", "left"])
+	keyCombo(["ctrl", "d"])
+	keyCombo(["ctrl", "d"])
+	keyCombo(["ctrl", "d"])
+	keyPress("delete")
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == " \n  \n   \n    ")
+	print("Ctrl d with different tab lengths test A passed")
+	keyCombo(["ctrl", "z"])
+	keyCombo(["ctrl", "a"])
+	keyCombo(["left"])
+	keyCombo(["shift", "right"])
+	keyCombo(["shift", "right"])
+	keyCombo(["ctrl", "d"])
+	keyCombo(["ctrl", "d"])
+	keyCombo(["ctrl", "d"])
+	keyPress("delete")
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "\n \n  \n   ")
+	print("Ctrl d with different tab lengths test B passed")
 # 	breakpoint()
 
 except Exception as e:
