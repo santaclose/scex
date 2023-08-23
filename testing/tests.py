@@ -58,11 +58,12 @@ def setClipText(text):
 def getClipText():
 	return pyperclip.paste()
 
+logFile = open("stdout.txt", "w")
 os.chdir("..")
 if "nolaunch" in sys.argv:
 	waitAndClickOnImage("testing/find_window.png")
 else:
-	p = subprocess.Popen(["bin/Release-windows-x86_64/scex/scex.exe"], stdout=subprocess.DEVNULL)
+	p = subprocess.Popen(["bin/Release-windows-x86_64/scex/scex.exe"], stdout=logFile)
 
 try:
 	time.sleep(0.5)
@@ -315,3 +316,4 @@ except Exception as e:
 
 print("All tests passed")
 os.kill(p.pid, signal.SIGTERM)
+logFile.close()
