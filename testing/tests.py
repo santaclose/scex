@@ -277,7 +277,7 @@ try:
 	keyCombo(["ctrl", "a"])
 	keyCombo(["ctrl", "c"])
 	assert(getClipText() == " \n  \n   \n    ")
-	print("Ctrl d with different tab lengths test A passed")
+	print("Tricky ctrl d test A passed")
 	keyCombo(["ctrl", "z"])
 	keyCombo(["ctrl", "a"])
 	keyCombo(["left"])
@@ -290,7 +290,23 @@ try:
 	keyCombo(["ctrl", "a"])
 	keyCombo(["ctrl", "c"])
 	assert(getClipText() == "\n \n  \n   ")
-	print("Ctrl d with different tab lengths test B passed")
+	print("Tricky ctrl d test B passed")
+	keyCombo(["ctrl", "z"])
+	keyCombo(["ctrl", "a"])
+	keyCombo(["left"])
+	keyCombo(["shift", "right"])
+	keyCombo(["shift", "right"])
+	keyCombo(["shift", "right"])
+	keyCombo(["ctrl", "d"])
+	keyCombo(["ctrl", "d"])
+	keyCombo(["ctrl", "d"])
+	keyCombo(["ctrl", "d"]) # one extra time
+	keyPress("delete")
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "       \t")
+	print("Multiline ctrl d test passed")
+	
 # 	breakpoint()
 
 except Exception as e:
