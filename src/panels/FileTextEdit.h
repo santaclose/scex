@@ -38,6 +38,7 @@ private:
 	std::string panelName;
 	std::string associatedFile;
 	int tabSize = 4;
+	float lineSpacing = 1.0f;
 	int undoIndexInDisk = 0;
 
 	static std::unordered_map<std::string, const TextEditor::LanguageDefinition*> extensionToLanguageDefinition;

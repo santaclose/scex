@@ -128,7 +128,9 @@ bool FileTextEdit::OnImGui()
 		if (ImGui::BeginMenu("View"))
 		{
 			ImGui::SliderInt("Tab size", &tabSize, 1, 8);
+			ImGui::SliderFloat("Line spacing", &lineSpacing, 1.0f, 2.0f);
 			editor->SetTabSize(tabSize);
+			editor->SetLineSpacing(lineSpacing);
 			static bool showSpaces = editor->IsShowingWhitespaces();
 			if (ImGui::MenuItem("Show spaces", nullptr, &showSpaces))
 				editor->SetShowWhitespaces(!(editor->IsShowingWhitespaces()));
@@ -213,9 +215,11 @@ bool FileTextEdit::OnImGui()
 		ImGui::InputInt("Line", &targetLine);
 		if (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))
 		{
+			static int targetLineFixed;
+			targetLineFixed = targetLine < 1 ? 0 : targetLine - 1;
 			editor->ClearExtraCursors();
 			editor->ClearSelections();
-			editor->SetCursorPosition({ targetLine < 1 ? 0 : targetLine - 1, 0 });
+			editor->SetSelection({ targetLineFixed , 0 }, { targetLineFixed + 1, 0 });
 			ImGui::CloseCurrentPopup();
 			ImGui::GetIO().ClearInputKeys();
 		}
