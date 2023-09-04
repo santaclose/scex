@@ -307,7 +307,7 @@ try:
 	keyCombo(["ctrl", "c"])
 	assert(getClipText() == "       \t")
 	print("Multiline ctrl d test passed")
-	
+
 	setClipText("asdf\nasdf\nasdf")
 	keyCombo(["ctrl", "v"])
 	keyCombo(["ctrl", "end"])
@@ -337,8 +337,47 @@ try:
 	keyCombo(["ctrl", "c"])
 	assert(getClipText() == "\n\n")
 	print("Ctrl f test passed")
-	
-	
+
+	setClipText("asdf\nqwer\nzxcv")
+	keyCombo(["ctrl", "v"])
+	keyCombo(["ctrl", "end"])
+	keyCombo(["ctrl", "g"])
+	keyPress("2")
+	keyPress("enter")
+	keyPress("delete")
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "asdf\nzxcv")
+	keyCombo(["ctrl", "end"])
+	keyCombo(["ctrl", "g"])
+	keyPress("2")
+	keyPress("enter")
+	keyPress("delete")
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "asdf\n")
+	setClipText("asdf\nqwer\nzxcv")
+	keyCombo(["ctrl", "v"])
+	keyCombo(["ctrl", "end"])
+	keyCombo(["ctrl", "g"])
+	keyPress("1")
+	keyPress("enter")
+	keyPress("delete")
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "qwer\nzxcv")
+	keyCombo(["ctrl", "g"])
+	# check if it crashes with out of range index
+	keyPress("-")
+	keyPress("1")
+	keyPress("enter")
+	keyCombo(["ctrl", "g"])
+	keyPress("5")
+	keyPress("0")
+	keyPress("0")
+	keyPress("enter")
+	print("Ctrl g test passed")
+
 # 	breakpoint()
 
 except Exception as e:
