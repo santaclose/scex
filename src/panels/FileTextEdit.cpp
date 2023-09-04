@@ -237,7 +237,7 @@ bool FileTextEdit::OnImGui()
 		if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))
 		{
 			editor->ClearExtraCursors();
-			editor->SelectNextOccurrenceOf(toFindText, FIND_POPUP_TEXT_FIELD_LENGTH);
+			editor->SelectNextOccurrenceOf(toFindText, strlen(toFindText));
 		}
 		else if (ImGui::IsKeyDown(ImGuiKey_Escape))
 			ImGui::CloseCurrentPopup();
