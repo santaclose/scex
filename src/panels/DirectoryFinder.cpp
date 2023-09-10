@@ -33,8 +33,8 @@ bool DirectoryFinder::OnImGui()
 			onFocusedCallback(this->createdFromFolderView);
 
 		ImGui::InputText("Folder", directoryPath, MAX_PATH_LENGTH);
-		ImGui::Checkbox(".*", &regexEnabled);
-		ImGui::Checkbox("Aa", &caseSensitiveEnabled);
+		ImGui::Checkbox("Regular expression", &regexEnabled);
+		ImGui::Checkbox("Case sensitive", &caseSensitiveEnabled);
 		ImGui::InputText("To find", toFind, INPUT_BUFFER_SIZE);
 		ImGui::InputText("To include", toInclude, INPUT_BUFFER_SIZE);
 		ImGui::InputText("To exclude", toExclude, INPUT_BUFFER_SIZE);

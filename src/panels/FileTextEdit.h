@@ -2,6 +2,8 @@
 
 #include <TextEditor.h>
 
+#define FIND_POPUP_TEXT_FIELD_LENGTH 128
+
 struct FileTextEdit
 {
 	typedef void (*OnFocusedCallback)(int folderViewId);
@@ -40,6 +42,9 @@ private:
 	int tabSize = 4;
 	float lineSpacing = 1.0f;
 	int undoIndexInDisk = 0;
+
+	char ctrlfTextToFind[FIND_POPUP_TEXT_FIELD_LENGTH] = "";
+	bool ctrlfCaseSensitive = false;
 
 	static std::unordered_map<std::string, const TextEditor::LanguageDefinition*> extensionToLanguageDefinition;
 };

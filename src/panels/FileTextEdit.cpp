@@ -228,17 +228,22 @@ bool FileTextEdit::OnImGui()
 		ImGui::EndPopup();
 	}
 
-	if (requestingFindPopup) ImGui::OpenPopup("find_popup");
+	if (requestingFindPopup)
+		ImGui::OpenPopup("find_popup");
 	if (ImGui::BeginPopup("find_popup"))
 	{
-		static char toFindText[FIND_POPUP_TEXT_FIELD_LENGTH];
-		ImGui::SetKeyboardFocusHere();
-		ImGui::InputText("To find", toFindText, FIND_POPUP_TEXT_FIELD_LENGTH, ImGuiInputTextFlags_AutoSelectAll);
-		if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))
+		ImGui::Checkbox("Case sensitive", &ctrlfCaseSensitive);
+		if (requestingFindPopup)
+			ImGui::SetKeyboardFocusHere();
+		ImGui::InputText("To find", ctrlfTextToFind, FIND_POPUP_TEXT_FIELD_LENGTH, ImGuiInputTextFlags_AutoSelectAll);
+		int toFindTextSize = strlen(ctrlfTextToFind);
+		if ((ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)) && toFindTextSize > 0)
 		{
 			editor->ClearExtraCursors();
-			editor->SelectNextOccurrenceOf(toFindText, strlen(toFindText));
+			editor->SelectNextOccurrenceOf(ctrlfTextToFind, toFindTextSize, -1, ctrlfCaseSensitive);
 		}
+		if (ImGui::Button("Find all") && toFindTextSize > 0)
+			editor->SelectAllOccurrencesOf(ctrlfTextToFind, toFindTextSize, ctrlfCaseSensitive);
 		else if (ImGui::IsKeyDown(ImGuiKey_Escape))
 			ImGui::CloseCurrentPopup();
 
