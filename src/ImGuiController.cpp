@@ -27,6 +27,7 @@ namespace scex::ImGuiController
 	ImGuiID rightDockID = -1;
 
 	// ---- Callback declarations ---- //
+	void OnFolderViewNodeFound();
 	void OnFolderOpenInFileExplorer(const std::string& folderPath, int folderViewId);
 	void OnFindInFolder(const std::string& folderPath, int folderViewId);
 	void OnShowInFileExplorer(const std::string& filePath, int folderViewId);
@@ -66,7 +67,7 @@ namespace scex::ImGuiController
 	void CreateNewFolderViewer(const std::string& folderPath)
 	{
 		int folderViewerId = folderViewers.size();
-		folderViewers.push_back(new DirectoryTreeView(folderPath, OnFileClickedInFolderView, OnPanelFocused, &folderViewFileContextMenuOptions, &folderViewFolderContextMenuOptions, folderViewerId));
+		folderViewers.push_back(new DirectoryTreeView(folderPath, OnFolderViewNodeFound, OnFileClickedInFolderView, OnPanelFocused, &folderViewFileContextMenuOptions, &folderViewFolderContextMenuOptions, folderViewerId));
 	}
 	void CreateNewFolderSearch(const std::string& folderPath, int fromFolderView)
 	{
@@ -82,6 +83,10 @@ namespace scex::ImGuiController
 	}
 
 	// ---- Callbacks from folder view ---- //
+	void OnFolderViewNodeFound()
+	{
+		glfwPostEmptyEvent();
+	}
 	void OnFolderOpenInFileExplorer(const std::string& folderPath, int folderViewId)
 	{
 		Utils::OpenInFileExplorer(folderPath);
