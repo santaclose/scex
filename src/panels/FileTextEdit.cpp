@@ -8,7 +8,7 @@
 
 #define FIND_POPUP_TEXT_FIELD_LENGTH 128
 
-std::unordered_map<std::string, const TextEditor::LanguageDefinitionId> FileTextEdit::extensionToLanguageDefinition = {
+std::unordered_map<std::string, TextEditor::LanguageDefinitionId> FileTextEdit::extensionToLanguageDefinition = {
 	{".cpp", TextEditor::LanguageDefinitionId::Cpp},
 	{".cc", TextEditor::LanguageDefinitionId::Cpp},
 	{".hpp", TextEditor::LanguageDefinitionId::Cpp},
@@ -23,6 +23,26 @@ std::unordered_map<std::string, const TextEditor::LanguageDefinitionId> FileText
 	{".cs", TextEditor::LanguageDefinitionId::Cs},
 	{".json", TextEditor::LanguageDefinitionId::Json}
 };
+std::unordered_map<TextEditor::LanguageDefinitionId, char*> FileTextEdit::languageDefinitionToName = {
+	{TextEditor::LanguageDefinitionId::None, "None"},
+	{TextEditor::LanguageDefinitionId::Cpp, "C++"},
+	{TextEditor::LanguageDefinitionId::C, "C"},
+	{TextEditor::LanguageDefinitionId::Cs, "C#"},
+	{TextEditor::LanguageDefinitionId::Python, "Python"},
+	{TextEditor::LanguageDefinitionId::Lua, "Lua"},
+	{TextEditor::LanguageDefinitionId::Json, "Json"},
+	{TextEditor::LanguageDefinitionId::Sql, "SQL"},
+	{TextEditor::LanguageDefinitionId::AngelScript, "AngelScript"},
+	{TextEditor::LanguageDefinitionId::Glsl, "GLSL"},
+	{TextEditor::LanguageDefinitionId::Hlsl, "HLSL"}
+};
+std::unordered_map<TextEditor::PaletteId, char*> FileTextEdit::colorPaletteToName = {
+	{TextEditor::PaletteId::Dark, "Dark"},
+	{TextEditor::PaletteId::Light, "Light"},
+	{TextEditor::PaletteId::Mariana, "Mariana"},
+	{TextEditor::PaletteId::RetroBlue, "Retro blue"}
+};
+
 
 FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFocusedCallback onFocusedCallback, OnShowInFolderViewCallback onShowInFolderViewCallback)
 {
@@ -138,40 +158,24 @@ bool FileTextEdit::OnImGui()
 			static bool showShortTabs = editor->IsShortTabsEnabled();
 			if (ImGui::MenuItem("Short tabs", nullptr, &showShortTabs))
 				editor->SetShortTabsEnabled(!(editor->IsShortTabsEnabled()));
-			if (ImGui::BeginMenu("Syntax highlighting"))
+			if (ImGui::BeginMenu("Language"))
 			{
-				if (ImGui::MenuItem("C++"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Cpp);
-				if (ImGui::MenuItem("C"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::C);
-				if (ImGui::MenuItem("C#"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Cs);
-				if (ImGui::MenuItem("Python"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Python);
-				if (ImGui::MenuItem("Lua"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Lua);
-				if (ImGui::MenuItem("Json"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Json);
-				if (ImGui::MenuItem("SQL"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Sql);
-				if (ImGui::MenuItem("AngelScript"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::AngelScript);
-				if (ImGui::MenuItem("GLSL"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Glsl);
-				if (ImGui::MenuItem("HLSL"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Hlsl);
+				for (int i = (int)TextEditor::LanguageDefinitionId::None; i <= (int)TextEditor::LanguageDefinitionId::Hlsl; i++)
+				{
+					bool isSelected = i == (int)editor->GetLanguageDefinition();
+					if (ImGui::MenuItem(languageDefinitionToName[(TextEditor::LanguageDefinitionId)i], nullptr, &isSelected))
+						editor->SetLanguageDefinition((TextEditor::LanguageDefinitionId)i);
+				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Color scheme"))
 			{
-				if (ImGui::MenuItem("Dark palette"))
-					editor->SetPalette(TextEditor::PaletteId::Dark);
-				if (ImGui::MenuItem("Light palette"))
-					editor->SetPalette(TextEditor::PaletteId::Light);
-				if (ImGui::MenuItem("Mariana palette"))
-					editor->SetPalette(TextEditor::PaletteId::Mariana);
-				if (ImGui::MenuItem("Retro blue palette"))
-					editor->SetPalette(TextEditor::PaletteId::RetroBlue);
+				for (int i = (int)TextEditor::PaletteId::Dark; i <= (int)TextEditor::PaletteId::RetroBlue; i++)
+				{
+					bool isSelected = i == (int)editor->GetPalette();
+					if (ImGui::MenuItem(colorPaletteToName[(TextEditor::PaletteId)i], nullptr, &isSelected))
+						editor->SetPalette((TextEditor::PaletteId)i);
+				}
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenu();
