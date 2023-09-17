@@ -46,5 +46,5 @@ private:
 	char ctrlfTextToFind[FIND_POPUP_TEXT_FIELD_LENGTH] = "";
 	bool ctrlfCaseSensitive = false;
 
-	static std::unordered_map<std::string, const TextEditor::LanguageDefinition*> extensionToLanguageDefinition;
+	static std::unordered_map<std::string, const TextEditor::LanguageDefinitionId> extensionToLanguageDefinition;
 };

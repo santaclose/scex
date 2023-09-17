@@ -8,20 +8,20 @@
 
 #define FIND_POPUP_TEXT_FIELD_LENGTH 128
 
-std::unordered_map<std::string, const TextEditor::LanguageDefinition*> FileTextEdit::extensionToLanguageDefinition = {
-	{".cpp", &TextEditor::LanguageDefinition::CPlusPlus()},
-	{".cc", &TextEditor::LanguageDefinition::CPlusPlus()},
-	{".hpp", &TextEditor::LanguageDefinition::CPlusPlus()},
-	{".h", &TextEditor::LanguageDefinition::CPlusPlus()},
-	{".hlsl", &TextEditor::LanguageDefinition::HLSL()},
-	{".glsl", &TextEditor::LanguageDefinition::GLSL()},
-	{".py", &TextEditor::LanguageDefinition::Python()},
-	{".c", &TextEditor::LanguageDefinition::C()},
-	{".sql", &TextEditor::LanguageDefinition::SQL()},
-	{".as", &TextEditor::LanguageDefinition::AngelScript()},
-	{".lua",&TextEditor::LanguageDefinition::Lua()},
-	{".cs",&TextEditor::LanguageDefinition::CSharp()},
-	{".json",&TextEditor::LanguageDefinition::Json()}
+std::unordered_map<std::string, const TextEditor::LanguageDefinitionId> FileTextEdit::extensionToLanguageDefinition = {
+	{".cpp", TextEditor::LanguageDefinitionId::Cpp},
+	{".cc", TextEditor::LanguageDefinitionId::Cpp},
+	{".hpp", TextEditor::LanguageDefinitionId::Cpp},
+	{".h", TextEditor::LanguageDefinitionId::Cpp},
+	{".hlsl", TextEditor::LanguageDefinitionId::Hlsl},
+	{".glsl", TextEditor::LanguageDefinitionId::Glsl},
+	{".py", TextEditor::LanguageDefinitionId::Python},
+	{".c", TextEditor::LanguageDefinitionId::C},
+	{".sql", TextEditor::LanguageDefinitionId::Sql},
+	{".as", TextEditor::LanguageDefinitionId::AngelScript},
+	{".lua", TextEditor::LanguageDefinitionId::Lua},
+	{".cs", TextEditor::LanguageDefinitionId::Cs},
+	{".json", TextEditor::LanguageDefinitionId::Json}
 };
 
 FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFocusedCallback onFocusedCallback, OnShowInFolderViewCallback onShowInFolderViewCallback)
@@ -45,7 +45,7 @@ FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderVi
 		editor->SetText(str);
 		auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
 		if (lang != extensionToLanguageDefinition.end())
-			editor->SetLanguageDefinition(*(*lang).second);
+			editor->SetLanguageDefinition(lang->second);
 	}
 }
 
@@ -112,8 +112,6 @@ bool FileTextEdit::OnImGui()
 				editor->Copy();
 			if (ImGui::MenuItem("Cut", "Ctrl+X", nullptr, !ro && editor->AnyCursorHasSelection()))
 				editor->Cut();
-			if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor->AnyCursorHasSelection()))
-				editor->Delete();
 			if (ImGui::MenuItem("Paste", "Ctrl+V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
 				editor->Paste();
 
@@ -131,43 +129,49 @@ bool FileTextEdit::OnImGui()
 			ImGui::SliderFloat("Line spacing", &lineSpacing, 1.0f, 2.0f);
 			editor->SetTabSize(tabSize);
 			editor->SetLineSpacing(lineSpacing);
-			static bool showSpaces = editor->IsShowingWhitespaces();
+			static bool showSpaces = editor->IsShowWhitespacesEnabled();
 			if (ImGui::MenuItem("Show spaces", nullptr, &showSpaces))
-				editor->SetShowWhitespaces(!(editor->IsShowingWhitespaces()));
+				editor->SetShowWhitespacesEnabled(!(editor->IsShowWhitespacesEnabled()));
+			static bool showLineNumbers = editor->IsShowLineNumbersEnabled();
+			if (ImGui::MenuItem("Show line numbers", nullptr, &showLineNumbers))
+				editor->SetShowLineNumbersEnabled(!(editor->IsShowLineNumbersEnabled()));
+			static bool showShortTabs = editor->IsShortTabsEnabled();
+			if (ImGui::MenuItem("Short tabs", nullptr, &showShortTabs))
+				editor->SetShortTabsEnabled(!(editor->IsShortTabsEnabled()));
 			if (ImGui::BeginMenu("Syntax highlighting"))
 			{
 				if (ImGui::MenuItem("C++"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::CPlusPlus());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Cpp);
 				if (ImGui::MenuItem("C"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::C());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::C);
 				if (ImGui::MenuItem("C#"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::CSharp());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Cs);
 				if (ImGui::MenuItem("Python"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Python);
 				if (ImGui::MenuItem("Lua"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::Lua());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Lua);
 				if (ImGui::MenuItem("Json"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::Json());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Json);
 				if (ImGui::MenuItem("SQL"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::SQL());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Sql);
 				if (ImGui::MenuItem("AngelScript"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::AngelScript());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::AngelScript);
 				if (ImGui::MenuItem("GLSL"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Glsl);
 				if (ImGui::MenuItem("HLSL"))
-					editor->SetLanguageDefinition(TextEditor::LanguageDefinition::HLSL());
+					editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Hlsl);
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Color scheme"))
 			{
 				if (ImGui::MenuItem("Dark palette"))
-					editor->SetPalette(TextEditor::GetDarkPalette());
-				if (ImGui::MenuItem("Mariana palette"))
-					editor->SetPalette(TextEditor::GetMarianaPalette());
+					editor->SetPalette(TextEditor::PaletteId::Dark);
 				if (ImGui::MenuItem("Light palette"))
-					editor->SetPalette(TextEditor::GetLightPalette());
+					editor->SetPalette(TextEditor::PaletteId::Light);
+				if (ImGui::MenuItem("Mariana palette"))
+					editor->SetPalette(TextEditor::PaletteId::Mariana);
 				if (ImGui::MenuItem("Retro blue palette"))
-					editor->SetPalette(TextEditor::GetRetroBluePalette());
+					editor->SetPalette(TextEditor::PaletteId::RetroBlue);
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenu();
@@ -182,9 +186,10 @@ bool FileTextEdit::OnImGui()
 			ImGui::EndMenu();
 		}
 
-		auto cpos = editor->GetCursorPosition();
-		ImGui::Text("%6d/%-6d %6d lines | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor->GetTotalLines(),
-			editor->IsOverwrite() ? "Ovr" : "Ins",
+		int line, column;
+		editor->GetCursorPosition(line, column);
+		ImGui::Text("%6d/%-6d %6d lines | %s | %s", line + 1, column + 1, editor->GetLineCount(),
+			editor->IsOverwriteEnabled() ? "Ovr" : "Ins",
 			editor->GetLanguageDefinitionName());
 
 		ImGui::EndMenuBar();
@@ -219,7 +224,7 @@ bool FileTextEdit::OnImGui()
 			targetLineFixed = targetLine < 1 ? 0 : targetLine - 1;
 			editor->ClearExtraCursors();
 			editor->ClearSelections();
-			editor->SetSelection({ targetLineFixed , 0 }, { targetLineFixed + 1, 0 });
+			editor->SelectLine(targetLineFixed);
 			ImGui::CloseCurrentPopup();
 			ImGui::GetIO().ClearInputKeys();
 		}
@@ -240,7 +245,7 @@ bool FileTextEdit::OnImGui()
 		if ((ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)) && toFindTextSize > 0)
 		{
 			editor->ClearExtraCursors();
-			editor->SelectNextOccurrenceOf(ctrlfTextToFind, toFindTextSize, -1, ctrlfCaseSensitive);
+			editor->SelectNextOccurrenceOf(ctrlfTextToFind, toFindTextSize, ctrlfCaseSensitive);
 		}
 		if (ImGui::Button("Find all") && toFindTextSize > 0)
 			editor->SelectAllOccurrencesOf(ctrlfTextToFind, toFindTextSize, ctrlfCaseSensitive);
@@ -258,7 +263,7 @@ bool FileTextEdit::OnImGui()
 void FileTextEdit::SetSelection(int startLine, int startChar, int endLine, int endChar)
 {
 	editor->SetCursorPosition(endLine, endChar);
-	editor->SetSelection(startLine, startChar, endLine, endChar);
+	editor->SelectRegion(startLine, startChar, endLine, endChar);
 }
 
 const char* FileTextEdit::GetAssociatedFile()
@@ -304,7 +309,7 @@ void FileTextEdit::OnLoadFromCommand()
 		auto pathObject = std::filesystem::path(selection[0]);
 		auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
 		if (lang != extensionToLanguageDefinition.end())
-			editor->SetLanguageDefinition(*extensionToLanguageDefinition[pathObject.extension().string()]);
+			editor->SetLanguageDefinition(extensionToLanguageDefinition[pathObject.extension().string()]);
 	}
 	undoIndexInDisk = -1; // assume they are loading text from some other file
 }
