@@ -170,9 +170,15 @@ void scex::ImGuiController::Setup(GLFWwindow* window)
 
 	// Setup Dear ImGui style
 	if (glfwIsWindowLightTheme(window))
+	{
 		ImGui::StyleColorsLight();
+		FileTextEdit::SetLightPaletteAsDefault();
+	}
 	else
+	{
 		ImGui::StyleColorsDark();
+		FileTextEdit::SetDarkPaletteAsDefault();
+	}
 	io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
 	io.IniFilename = nullptr;
 }

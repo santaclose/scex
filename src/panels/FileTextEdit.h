@@ -21,6 +21,9 @@ struct FileTextEdit
 	void OnFolderViewDeleted(int folderViewId);
 	void SetShowDebugPanel(bool value);
 
+	static inline void SetDarkPaletteAsDefault() { TextEditor::SetDefaultPalette(TextEditor::PaletteId::Dark); }
+	static inline void SetLightPaletteAsDefault() { TextEditor::SetDefaultPalette(TextEditor::PaletteId::Light); }
+
 private:
 
 	// Commands
