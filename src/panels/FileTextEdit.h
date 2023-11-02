@@ -15,7 +15,7 @@ struct FileTextEdit
 		OnFocusedCallback onFocusedCallback = nullptr,
 		OnShowInFolderViewCallback onShowInFolderViewCallback = nullptr);
 	~FileTextEdit();
-	bool OnImGui();
+	bool OnImGui(ImFont* editorFont = nullptr);
 	void SetSelection(int startLine, int startChar, int endLine, int endChar);
 	const char* GetAssociatedFile();
 	void OnFolderViewDeleted(int folderViewId);

@@ -40,6 +40,9 @@ namespace scex::ImGuiController
 	bool menuBarEnabled = true;
 	bool textEditDebugInfo = false;
 
+	ImFont* textEditorFont;
+	ImFont* uiFont;
+
 	std::unordered_map<std::string, FileTextEdit*> fileToEditorMap;
 	FileTextEdit* editorToFocus = nullptr;
 
@@ -151,7 +154,8 @@ void scex::ImGuiController::Setup(GLFWwindow* window)
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
 
-	std::string fontPath = PathUtils::GetAssetsDirectory() + "fonts/FiraCode/FiraCode-Regular.ttf";
+	std::string textEditorFontPath = PathUtils::GetAssetsDirectory() + "fonts/FiraCode/FiraCode-Regular.ttf";
+	std::string uiFontPath = PathUtils::GetAssetsDirectory() + "fonts/FiraSans/FiraSans-Regular.ttf";
 	float fontSize = 17.0f;
 	// Load from config file if exists
 	std::ifstream i(PathUtils::GetAssetsDirectory() + "config.json");
@@ -159,8 +163,8 @@ void scex::ImGuiController::Setup(GLFWwindow* window)
 	{
 		nlohmann::json j;
 		i >> j;
-		if (j.find("fontPath") != j.end())
-			fontPath = j["fontPath"];
+		if (j.find("textEditorFontPath") != j.end())
+			textEditorFontPath = j["textEditorFontPath"];
 		if (j.find("fontSize") != j.end())
 			fontSize = j["fontSize"];
 		std::cout << "Config file loaded\n";
@@ -179,7 +183,8 @@ void scex::ImGuiController::Setup(GLFWwindow* window)
 		ImGui::StyleColorsDark();
 		FileTextEdit::SetDarkPaletteAsDefault();
 	}
-	io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
+	uiFont = io.Fonts->AddFontFromFileTTF(uiFontPath.c_str(), fontSize);
+	textEditorFont = io.Fonts->AddFontFromFileTTF(textEditorFontPath.c_str(), fontSize);
 	io.IniFilename = nullptr;
 }
 
@@ -333,7 +338,7 @@ void scex::ImGuiController::Tick(double deltaTime)
 				ImGui::SetNextWindowFocus();
 				editorToFocus = nullptr;
 			}
-			if (!fte->OnImGui())
+			if (!fte->OnImGui(textEditorFont))
 				fileTextEditToDelete = i;
 		}
 		if (fileTextEditToDelete > -1)

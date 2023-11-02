@@ -74,7 +74,7 @@ FileTextEdit::~FileTextEdit()
 	delete editor;
 }
 
-bool FileTextEdit::OnImGui()
+bool FileTextEdit::OnImGui(ImFont* editorFont)
 {
 	bool windowIsOpen = true;
 	if (showDebugPanel)
@@ -199,7 +199,10 @@ bool FileTextEdit::OnImGui()
 		ImGui::EndMenuBar();
 	}
 
+	if (editorFont != nullptr) ImGui::PushFont(editorFont);
 	isFocused |= editor->Render("TextEditor", isFocused);
+	if (editorFont != nullptr) ImGui::PopFont();
+
 	if (isFocused)
 	{
 		bool ctrlPressed = ImGui::GetIO().KeyCtrl;
