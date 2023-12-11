@@ -15,8 +15,9 @@ struct FileTextEdit
 		OnFocusedCallback onFocusedCallback = nullptr,
 		OnShowInFolderViewCallback onShowInFolderViewCallback = nullptr);
 	~FileTextEdit();
-	bool OnImGui(ImFont* editorFont = nullptr);
+	bool OnImGui();
 	void SetSelection(int startLine, int startChar, int endLine, int endChar);
+	void CenterViewAtLine(int line);
 	const char* GetAssociatedFile();
 	void OnFolderViewDeleted(int folderViewId);
 	void SetShowDebugPanel(bool value);
@@ -45,6 +46,7 @@ private:
 	int tabSize = 4;
 	float lineSpacing = 1.0f;
 	int undoIndexInDisk = 0;
+	int codeFontSize;
 
 	char ctrlfTextToFind[FIND_POPUP_TEXT_FIELD_LENGTH] = "";
 	bool ctrlfCaseSensitive = false;

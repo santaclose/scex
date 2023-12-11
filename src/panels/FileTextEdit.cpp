@@ -5,6 +5,7 @@
 #include <portable-file-dialogs.h>
 
 #include <Utils.h>
+#include <FontManager.h>
 
 #define FIND_POPUP_TEXT_FIELD_LENGTH 128
 
@@ -44,12 +45,18 @@ std::unordered_map<TextEditor::PaletteId, char*> FileTextEdit::colorPaletteToNam
 };
 
 
-FileTextEdit::FileTextEdit(const char* filePath, int id, int createdFromFolderView, OnFocusedCallback onFocusedCallback, OnShowInFolderViewCallback onShowInFolderViewCallback)
+FileTextEdit::FileTextEdit(
+	const char* filePath,
+	int id,
+	int createdFromFolderView,
+	OnFocusedCallback onFocusedCallback,
+	OnShowInFolderViewCallback onShowInFolderViewCallback)
 {
 	this->id = id;
 	this->createdFromFolderView = createdFromFolderView;
 	this->onFocusedCallback = onFocusedCallback;
 	this->onShowInFolderViewCallback = onShowInFolderViewCallback;
+	this->codeFontSize = FontManager::GetDefaultUiFontSize();
 	editor = new TextEditor();
 	if (filePath == nullptr)
 		panelName = "untitled##" + std::to_string((int)this);
@@ -74,8 +81,11 @@ FileTextEdit::~FileTextEdit()
 	delete editor;
 }
 
-bool FileTextEdit::OnImGui(ImFont* editorFont)
+bool FileTextEdit::OnImGui()
 {
+	ImFont* codeFontEditor = FontManager::GetCodeFont(codeFontSize);
+	ImFont* codeFontTopBar = FontManager::GetCodeFont(FontManager::GetDefaultUiFontSize());
+
 	bool windowIsOpen = true;
 	if (showDebugPanel)
 		editor->ImGuiDebugPanel("Debug " + panelName);
@@ -93,6 +103,8 @@ bool FileTextEdit::OnImGui(ImFont* editorFont)
 	bool isFocused = ImGui::IsWindowFocused();
 	bool requestingGoToLinePopup = false;
 	bool requestingFindPopup = false;
+	bool requestingFontSizeIncrease = false;
+	bool requestingFontSizeDecrease = false;
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -145,6 +157,7 @@ bool FileTextEdit::OnImGui(ImFont* editorFont)
 
 		if (ImGui::BeginMenu("View"))
 		{
+			ImGui::SliderInt("Font size", &codeFontSize, FontManager::GetMinCodeFontSize(), FontManager::GetMaxCodeFontSize());
 			ImGui::SliderInt("Tab size", &tabSize, 1, 8);
 			ImGui::SliderFloat("Line spacing", &lineSpacing, 1.0f, 2.0f);
 			editor->SetTabSize(tabSize);
@@ -193,18 +206,18 @@ bool FileTextEdit::OnImGui(ImFont* editorFont)
 		int line, column;
 		editor->GetCursorPosition(line, column);
 
-		if (editorFont != nullptr) ImGui::PushFont(editorFont);
+		if (codeFontTopBar != nullptr) ImGui::PushFont(codeFontTopBar);
 		ImGui::Text("%6d/%-6d %6d lines | %s | %s", line + 1, column + 1, editor->GetLineCount(),
 			editor->IsOverwriteEnabled() ? "Ovr" : "Ins",
 			editor->GetLanguageDefinitionName());
-		if (editorFont != nullptr) ImGui::PopFont();
+		if (codeFontTopBar != nullptr) ImGui::PopFont();
 
 		ImGui::EndMenuBar();
 	}
 
-	if (editorFont != nullptr) ImGui::PushFont(editorFont);
+	if (codeFontEditor != nullptr) ImGui::PushFont(codeFontEditor);
 	isFocused |= editor->Render("TextEditor", isFocused);
-	if (editorFont != nullptr) ImGui::PopFont();
+	if (codeFontEditor != nullptr) ImGui::PopFont();
 
 	if (isFocused)
 	{
@@ -219,6 +232,10 @@ bool FileTextEdit::OnImGui(ImFont* editorFont)
 				requestingGoToLinePopup = true;
 			if (ImGui::IsKeyDown(ImGuiKey_F))
 				requestingFindPopup = true;
+			if (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::GetIO().MouseWheel > 0.0f)
+				requestingFontSizeIncrease = true;
+			if (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::GetIO().MouseWheel < 0.0f)
+				requestingFontSizeDecrease = true;
 		}
 	}
 
@@ -235,6 +252,7 @@ bool FileTextEdit::OnImGui(ImFont* editorFont)
 			editor->ClearExtraCursors();
 			editor->ClearSelections();
 			editor->SelectLine(targetLineFixed);
+			CenterViewAtLine(targetLineFixed);
 			ImGui::CloseCurrentPopup();
 			ImGui::GetIO().ClearInputKeys();
 		}
@@ -256,6 +274,9 @@ bool FileTextEdit::OnImGui(ImFont* editorFont)
 		{
 			editor->ClearExtraCursors();
 			editor->SelectNextOccurrenceOf(ctrlfTextToFind, toFindTextSize, ctrlfCaseSensitive);
+			int nextOccurrenceLine, _;
+			editor->GetCursorPosition(nextOccurrenceLine, _);
+			CenterViewAtLine(nextOccurrenceLine);
 		}
 		if (ImGui::Button("Find all") && toFindTextSize > 0)
 			editor->SelectAllOccurrencesOf(ctrlfTextToFind, toFindTextSize, ctrlfCaseSensitive);
@@ -264,6 +285,11 @@ bool FileTextEdit::OnImGui(ImFont* editorFont)
 
 		ImGui::EndPopup();
 	}
+
+	if (requestingFontSizeIncrease && codeFontSize < FontManager::GetMaxCodeFontSize())
+		codeFontSize++;
+	if (requestingFontSizeDecrease && codeFontSize > FontManager::GetMinCodeFontSize())
+		codeFontSize--;
 
 	ImGui::End();
 
@@ -274,6 +300,11 @@ void FileTextEdit::SetSelection(int startLine, int startChar, int endLine, int e
 {
 	editor->SetCursorPosition(endLine, endChar);
 	editor->SelectRegion(startLine, startChar, endLine, endChar);
+}
+
+void FileTextEdit::CenterViewAtLine(int line)
+{
+	editor->SetViewAtLine(line, TextEditor::SetViewAtLineMode::Centered);
 }
 
 const char* FileTextEdit::GetAssociatedFile()

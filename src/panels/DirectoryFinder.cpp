@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include <Utils.h>
+#include <FontManager.h>
 
 DirectoryFinder::DirectoryFinder(const std::string& folderPath,
 	OnResultClickCallback onResultClickCallback,
@@ -26,6 +27,8 @@ DirectoryFinder::DirectoryFinder(const std::string& folderPath,
 
 bool DirectoryFinder::OnImGui()
 {
+	ImFont* codeFont = FontManager::GetCodeFont(FontManager::GetDefaultUiFontSize());
+
 	bool windowIsOpen = true;
 	if (ImGui::Begin(panelName.c_str(), &windowIsOpen, ImGuiWindowFlags_NoSavedSettings))
 	{
@@ -70,9 +73,11 @@ bool DirectoryFinder::OnImGui()
 				{
 					ImGui::Separator();
 					ImGui::TextUnformatted(file.fileName.c_str());
+					if (codeFont != nullptr) ImGui::PushFont(codeFont);
 					for (DirectoryFinderSearchResult* res : resultsInFile)
 						if (ImGui::Selectable(res->displayText.c_str()) && onResultClickCallback != nullptr)
 							onResultClickCallback(file.filePath, *res, createdFromFolderView);
+					if (codeFont != nullptr) ImGui::PopFont();
 				}
 			}
 		}
