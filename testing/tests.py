@@ -412,6 +412,22 @@ try:
 	keyPress("enter")
 	print("Ctrl g test passed")
 
+	setClipText("babubibabuba\nlalulalila lalulalila")
+	keyCombo(["ctrl", "a"])
+	keyPress("delete")
+	keyCombo(["ctrl", "v"])
+	keyCombo(["ctrl", "home"])
+	keyPress("right")
+	keyPress("right")
+	keyPress("right")
+	keyCombo(["shift", "down"])
+	keyCombo(["ctrl", "c"])
+	keyCombo(["ctrl", "v"])
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "babubibabuba\nlalulalila lalulalila")
+	print("DeleteRange cursor position bug test")
+
 # 	breakpoint()
 
 except Exception as e:
