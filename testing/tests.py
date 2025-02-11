@@ -428,6 +428,24 @@ try:
 	assert(getClipText() == "babubibabuba\nlalulalila lalulalila")
 	print("DeleteRange cursor position bug test")
 
+	setClipText("asdf\n\t")
+	keyCombo(["ctrl", "a"])
+	keyPress("delete")
+	keyCombo(["ctrl", "v"])
+	keyCombo(["ctrl", "home"])
+	keyPress("right")
+	keyPress("right")
+	keyPress("down")
+	keyPress("1")
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "asdf\n1\t")
+	keyCombo(["ctrl", "z"])
+	keyCombo(["ctrl", "a"])
+	keyCombo(["ctrl", "c"])
+	assert(getClipText() == "asdf\n\t")
+	print("Coordinate sanitizing with tab bug test")
+
 # 	breakpoint()
 
 except Exception as e:

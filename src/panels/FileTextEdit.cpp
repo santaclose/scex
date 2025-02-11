@@ -207,8 +207,7 @@ bool FileTextEdit::OnImGui()
 		editor->GetCursorPosition(line, column);
 
 		if (codeFontTopBar != nullptr) ImGui::PushFont(codeFontTopBar);
-		ImGui::Text("%6d/%-6d %6d lines | %s | %s", line + 1, column + 1, editor->GetLineCount(),
-			editor->IsOverwriteEnabled() ? "Ovr" : "Ins",
+		ImGui::Text("%6d/%-6d %6d lines | %s", line + 1, column + 1, editor->GetLineCount(),
 			editor->GetLanguageDefinitionName());
 		if (codeFontTopBar != nullptr) ImGui::PopFont();
 
