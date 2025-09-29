@@ -17,7 +17,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Projects
 group "Dependencies"
-	include "vendor/GLFW"
+	include "vendor/glfw"
 	include "vendor/Glad"
 	include "vendor/imgui"
 
@@ -50,7 +50,7 @@ project "scex"
 	includedirs
 	{
 		"src",
-		"vendor/GLFW/include",
+		"vendor/glfw/include",
 		"vendor/Glad/include",
 		"vendor/imgui",
 		"vendor/ImGuiColorTextEdit",
@@ -66,7 +66,7 @@ project "scex"
 		"GLFW",
 		"Glad",
 		"ImGui",
-		"opengl32.lib"
+		-- "opengl32.lib"
 	}
 
 	filter "system:windows"
@@ -82,10 +82,15 @@ project "scex"
 		defines "SCEX_DEBUG"
 		runtime "Debug"
 		symbols "on"
-		buildoptions { "/openmp" }
 
 	filter "configurations:Release"
 		defines "SCEX_RELEASE"
 		runtime "Release"
 		optimize "on"
+
+	filter { "action:gmake" }
+		buildoptions { "-fopenmp" }
+		linkoptions { "-fopenmp" }
+
+	filter { "action:vs2022" }
 		buildoptions { "/openmp" }

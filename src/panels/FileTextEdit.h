@@ -52,6 +52,6 @@ private:
 	bool ctrlfCaseSensitive = false;
 
 	static std::unordered_map<std::string, TextEditor::LanguageDefinitionId> extensionToLanguageDefinition;
-	static std::unordered_map<TextEditor::LanguageDefinitionId, char*> languageDefinitionToName;
-	static std::unordered_map<TextEditor::PaletteId, char*> colorPaletteToName;
+	static std::unordered_map<TextEditor::LanguageDefinitionId, const char*> languageDefinitionToName;
+	static std::unordered_map<TextEditor::PaletteId, const char*> colorPaletteToName;
 };

@@ -20,7 +20,7 @@ DirectoryFinder::DirectoryFinder(const std::string& folderPath,
 	this->onResultFoundCallback = onResultFoundCallback;
 	this->onSearchFinishedCallback = onSearchFinishedCallback;
 	this->onFocusedCallback = onFocusedCallback;
-	panelName = "Folder search##" + std::to_string((int)this);
+	panelName = "Folder search##" + std::to_string((unsigned long long)this);
 	strcpy(directoryPath, folderPath.c_str());
 	directoryPath[folderPath.length()] = '\0';
 }
@@ -130,8 +130,7 @@ void DirectoryFinder::Find()
 		if (toExclude[0] != '\0' && boost::regex_match(filePath, filePathMatch, toExcludeAsPattern))
 			continue;
 
-		std::ifstream fileInput;
-		fileInput.open(Utils::Utf8ToWstring(filePath));
+		std::ifstream fileInput(i->path());
 		std::string line;
 		int curLine = 0;
 		while (std::getline(fileInput, line))

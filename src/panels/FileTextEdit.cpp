@@ -24,7 +24,7 @@ std::unordered_map<std::string, TextEditor::LanguageDefinitionId> FileTextEdit::
 	{".cs", TextEditor::LanguageDefinitionId::Cs},
 	{".json", TextEditor::LanguageDefinitionId::Json}
 };
-std::unordered_map<TextEditor::LanguageDefinitionId, char*> FileTextEdit::languageDefinitionToName = {
+std::unordered_map<TextEditor::LanguageDefinitionId, const char*> FileTextEdit::languageDefinitionToName = {
 	{TextEditor::LanguageDefinitionId::None, "None"},
 	{TextEditor::LanguageDefinitionId::Cpp, "C++"},
 	{TextEditor::LanguageDefinitionId::C, "C"},
@@ -37,7 +37,7 @@ std::unordered_map<TextEditor::LanguageDefinitionId, char*> FileTextEdit::langua
 	{TextEditor::LanguageDefinitionId::Glsl, "GLSL"},
 	{TextEditor::LanguageDefinitionId::Hlsl, "HLSL"}
 };
-std::unordered_map<TextEditor::PaletteId, char*> FileTextEdit::colorPaletteToName = {
+std::unordered_map<TextEditor::PaletteId, const char*> FileTextEdit::colorPaletteToName = {
 	{TextEditor::PaletteId::Dark, "Dark"},
 	{TextEditor::PaletteId::Light, "Light"},
 	{TextEditor::PaletteId::Mariana, "Mariana"},
@@ -59,14 +59,14 @@ FileTextEdit::FileTextEdit(
 	this->codeFontSize = FontManager::GetDefaultUiFontSize();
 	editor = new TextEditor();
 	if (filePath == nullptr)
-		panelName = "untitled##" + std::to_string((int)this);
+		panelName = "untitled##" + std::to_string((unsigned long long)this);
 	else
 	{
 		hasAssociatedFile = true;
 		associatedFile = std::string(filePath);
 		auto pathObject = std::filesystem::path(filePath);
-		panelName = pathObject.filename().string() + "##" + std::to_string((int)this);
-		std::ifstream t(Utils::Utf8ToWstring(filePath));
+		panelName = pathObject.filename().string() + "##" + std::to_string((unsigned long long)this);
+		std::ifstream t(pathObject);
 		std::string str((std::istreambuf_iterator<char>(t)),
 			std::istreambuf_iterator<char>());
 		editor->SetText(str);
@@ -328,7 +328,7 @@ void FileTextEdit::SetShowDebugPanel(bool value)
 
 void FileTextEdit::OnReloadCommand()
 {
-	std::ifstream t(Utils::Utf8ToWstring(associatedFile));
+	std::ifstream t{std::filesystem::path(associatedFile)};
 	std::string str((std::istreambuf_iterator<char>(t)),
 		std::istreambuf_iterator<char>());
 	editor->SetText(str);
@@ -342,11 +342,11 @@ void FileTextEdit::OnLoadFromCommand()
 		std::cout << "File not loaded\n";
 	else
 	{
-		std::ifstream t(Utils::Utf8ToWstring(selection[0]));
+		auto pathObject = std::filesystem::path(selection[0]);
+		std::ifstream t(pathObject);
 		std::string str((std::istreambuf_iterator<char>(t)),
 			std::istreambuf_iterator<char>());
 		editor->SetText(str);
-		auto pathObject = std::filesystem::path(selection[0]);
 		auto lang = extensionToLanguageDefinition.find(pathObject.extension().string());
 		if (lang != extensionToLanguageDefinition.end())
 			editor->SetLanguageDefinition(extensionToLanguageDefinition[pathObject.extension().string()]);
@@ -364,8 +364,9 @@ void FileTextEdit::OnSaveCommand()
 	{
 		associatedFile = destination;
 		hasAssociatedFile = true;
-		panelName = std::filesystem::path(destination).filename().string() + "##" + std::to_string((int)this);
-		std::ofstream outFile(Utils::Utf8ToWstring(destination), std::ios::binary);
+		auto pathObject = std::filesystem::path(destination);
+		panelName = pathObject.filename().string() + "##" + std::to_string((unsigned long long)this);
+		std::ofstream outFile(pathObject, std::ios::binary);
 		outFile << textToSave;
 		outFile.close();
 	}

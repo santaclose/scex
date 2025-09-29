@@ -1,7 +1,8 @@
-#include "pathUtils.h"
+#include "PathUtils.h"
 
 #include <filesystem>
 #include <iostream>
+#include <vector>
 
 #ifdef SCEX_PLATFORM_WINDOWS
 #define PATH_SEP '\\'
